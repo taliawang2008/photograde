@@ -7,11 +7,11 @@ import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
 import FiltersPanel from './components/FiltersPanel';
-import { filmProfiles, filmTypeList, getFilmDisplayName } from './engine/filmProfiles';
+import { filmProfiles } from './engine/filmProfiles';
 import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { filmCharacterPresets } from './engine/filmPresets';
-import { useDebouncedLocalStorage, getStoredValue } from './hooks/useLocalStorage';
+import { getStoredValue } from './hooks/useLocalStorage';
 import { calculateImageStats, computeAutoParams } from './engine/AutoGrade';
 import type {
   GradingParams,
@@ -23,7 +23,7 @@ import type {
   FilmType,
   LogProfile,
   ACESOutputTransform,
-  CurvePoint, // Added CurvePoint type
+
 } from './types';
 import { acesOutputTransforms } from './engine/acesProfiles';
 import { defaultGradingParams } from './types';
@@ -166,7 +166,7 @@ function App() {
   }, []);
 
   // 自动保存参数到 localStorage
-  const [lutName, setLutName] = useState<string>(''); // Display name for loaded LUT
+  // lutName state removed - was unused
 
   // Auto-Normalize State
   const [isNormalized, setIsNormalized] = useState(false);
