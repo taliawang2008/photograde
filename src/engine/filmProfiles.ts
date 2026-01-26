@@ -1,6 +1,36 @@
 // 胶片模拟配置 - 扩展版
 import type { FilmType, FilmProfile } from '../types';
 
+// Shared Matrices
+type Mat3 = [number, number, number, number, number, number, number, number, number];
+
+const MAT_WARM: Mat3 = [
+  1.05, -0.05, 0.0,
+  0.0, 1.02, -0.02,
+  -0.05, 0.05, 1.0
+];
+const MAT_PORTRAIT: Mat3 = [
+  1.02, -0.01, -0.01,
+  0.01, 1.01, -0.02,
+  -0.01, 0.01, 1.0
+];
+const MAT_FUJI: Mat3 = [
+  0.95, 0.05, 0.0,
+  0.0, 1.02, -0.02,
+  0.0, 0.05, 1.05
+];
+const MAT_VIVID: Mat3 = [
+  1.1, -0.1, 0.0,
+  -0.05, 1.1, -0.05,
+  0.0, -0.1, 1.1
+];
+// B&W Filter (Yellow: Pass R+G, block B slightly)
+const MAT_BW_YELLOW: Mat3 = [
+  0.9, 0.05, 0.05,
+  0.05, 0.9, 0.05,
+  0.0, 0.0, 0.5
+];
+
 export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
   // ==================== KODAK COLOR NEGATIVE ====================
 
@@ -15,11 +45,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainSize: 0.8,
     acutance: 0.1, // Slight sharpening
     isBlackAndWhite: false,
-    colorMatrix: [
-      1.05, -0.05, 0.0,
-      0.0, 1.02, -0.02,
-      -0.05, 0.05, 1.0
-    ], // Warm/Golden shift
+    colorMatrix: MAT_WARM,
   },
 
   'portra-160': {
@@ -32,6 +58,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.6,
     isBlackAndWhite: false,
+    colorMatrix: MAT_PORTRAIT,
   },
 
   'portra-400': {
@@ -44,11 +71,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.018,
     grainSize: 0.9,
     isBlackAndWhite: false,
-    colorMatrix: [
-      1.02, -0.01, -0.01,
-      0.01, 1.01, -0.02,
-      -0.01, 0.01, 1.0
-    ], // Accurate skin tones
+    colorMatrix: MAT_PORTRAIT,
   },
 
   'portra-800': {
@@ -61,6 +84,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.035,
     grainSize: 1.1,
     isBlackAndWhite: false,
+    colorMatrix: MAT_PORTRAIT,
   },
 
   'ektar': {
@@ -73,6 +97,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.008,
     grainSize: 0.4,
     isBlackAndWhite: false,
+    colorMatrix: MAT_VIVID,
   },
 
   'ultramax': {
@@ -85,6 +110,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.028,
     grainSize: 0.85,
     isBlackAndWhite: false,
+    colorMatrix: MAT_WARM,
   },
 
   'colorplus': {
@@ -97,6 +123,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.022,
     grainSize: 0.75,
     isBlackAndWhite: false,
+    colorMatrix: MAT_WARM,
   },
 
   // ==================== KODAK SLIDE/REVERSAL ====================
@@ -111,6 +138,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.012,
     grainSize: 0.5,
     isBlackAndWhite: false,
+    colorMatrix: MAT_VIVID,
   },
 
   'ektachrome': {
@@ -123,6 +151,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.45,
     isBlackAndWhite: false,
+    colorMatrix: MAT_FUJI, // Cool bias
   },
 
   // ==================== FUJIFILM COLOR NEGATIVE ====================
@@ -137,6 +166,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.025,
     grainSize: 0.85,
     isBlackAndWhite: false,
+    colorMatrix: MAT_FUJI,
   },
 
   'fuji-400h': {
@@ -149,11 +179,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.015,
     grainSize: 0.8,
     isBlackAndWhite: false,
-    colorMatrix: [
-      0.95, 0.05, 0.0,
-      0.0, 1.02, -0.02,
-      0.0, 0.05, 1.05
-    ], // Cool/Green-ish
+    colorMatrix: MAT_FUJI,
   },
 
   'fuji-c200': {
@@ -166,6 +192,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.02,
     grainSize: 0.7,
     isBlackAndWhite: false,
+    colorMatrix: MAT_FUJI,
   },
 
   // ==================== FUJIFILM SLIDE ====================
@@ -205,6 +232,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.007,
     grainSize: 0.45,
     isBlackAndWhite: false,
+    colorMatrix: MAT_PORTRAIT, // Softer slide
   },
 
   // ==================== CINESTILL (CINEMA) ====================
@@ -236,6 +264,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.5,
     isBlackAndWhite: false,
+    colorMatrix: MAT_PORTRAIT,
   },
 
   // ==================== BLACK & WHITE ====================
@@ -250,6 +279,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.035,
     grainSize: 0.85,
     isBlackAndWhite: true,
+    colorMatrix: MAT_BW_YELLOW,
   },
 
   'trix': {
@@ -262,6 +292,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.03,
     grainSize: 0.9,
     isBlackAndWhite: true,
+    colorMatrix: MAT_BW_YELLOW,
   },
 
   'delta': {
@@ -274,6 +305,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.055,
     grainSize: 1.3,
     isBlackAndWhite: true,
+    colorMatrix: MAT_BW_YELLOW,
   },
 
   'tmax': {
@@ -287,6 +319,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainSize: 0.5,
     acutance: 0.4, // Very high acutance (T-Grain)
     isBlackAndWhite: true,
+    colorMatrix: MAT_BW_YELLOW,
   },
 
   'acros': {
@@ -299,6 +332,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.45,
     isBlackAndWhite: true,
+    colorMatrix: MAT_BW_YELLOW,
   },
 
   'pan-f': {
@@ -311,6 +345,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.006,
     grainSize: 0.35,
     isBlackAndWhite: true,
+    colorMatrix: MAT_BW_YELLOW,
   },
 
   // ==================== SPECIAL RECIPES ====================
