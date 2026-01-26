@@ -1493,7 +1493,8 @@ button {
         position: fixed;
         top: calc(60px + env(safe-area-inset-top));
         bottom: calc(70px + env(safe-area-inset-bottom));
-        width: 75%;
+        width: 35%;
+        min-width: 220px;
         max-width: 320px;
         height: auto;
         z-index: 150;
