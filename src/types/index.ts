@@ -6,6 +6,8 @@ import type { ACESOutputTransform } from '../engine/acesProfiles';
 export type { ACESOutputTransform } from '../engine/acesProfiles';
 
 // 胶片类型
+// Custom type for recipe overrides
+
 export type FilmType =
   | 'none'
   // Kodak Color Negative
@@ -36,7 +38,11 @@ export type FilmType =
   | 'delta'
   | 'tmax'
   | 'acros'
-  | 'pan-f';
+  | 'pan-f'
+  // Special / Recipes (Phase 7)
+  | 'kodak-2383'
+  | 'lomochrome-purple'
+  | 'reala-ace';
 
 // RGB 颜色偏移
 export interface RGBOffset {
@@ -254,6 +260,16 @@ export interface FilmProfile {
     number, number, number,
     number, number, number
   ];
+
+  // Recipe Overrides (from Research)
+  curves?: CurvesData;
+  shadowLift?: RGBOffset;
+  midtoneGamma?: RGBOffset;
+  highlightGain?: RGBOffset;
+
+  // Misc overrides
+  saturationOverride?: number; // Override saturation param
+  contrastOverride?: number; // Override contrast param
 }
 
 // Action 类型 (用于 useReducer)

@@ -6,6 +6,7 @@ import { Histogram, calculateHistogram } from './components/Histogram';
 import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
+import { filmProfiles } from './engine/filmProfiles';
 import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { useDebouncedLocalStorage, getStoredValue } from './hooks/useLocalStorage';
 import type {
@@ -240,6 +241,30 @@ function App() {
   }, [params.curves]);
 
   // Handle ACES Output Transform loading
+  const handleFilmChange = (filmType: FilmType) => {
+    // 1. Set the film type base
+    dispatch({ type: 'SET_PARAM', param: 'filmType', value: filmType });
+
+    // 2. Check for recipe overrides
+    if (filmType === 'none') return;
+
+    const profile = filmProfiles[filmType as keyof typeof filmProfiles];
+    if (profile) {
+      if (profile.shadowLift) dispatch({ type: 'SET_PARAM', param: 'shadowLift', value: profile.shadowLift });
+      if (profile.midtoneGamma) dispatch({ type: 'SET_PARAM', param: 'midtoneGamma', value: profile.midtoneGamma });
+      if (profile.highlightGain) dispatch({ type: 'SET_PARAM', param: 'highlightGain', value: profile.highlightGain });
+      if (profile.curves) {
+        dispatch({ type: 'SET_PARAM', param: 'curves', value: profile.curves });
+      }
+      if (profile.saturationOverride !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'saturation', value: profile.saturationOverride });
+      }
+      if (profile.contrastOverride !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'contrast', value: profile.contrastOverride });
+      }
+    }
+  };
+
   useEffect(() => {
     if (!engineRef.current) return;
 
@@ -395,9 +420,11 @@ function App() {
             </div>
 
             {/* Film Type Dropdown with Live Preview */}
+            {/* 胶片模拟 */}
+            <div className="section-title">🎞️ Film Emulation</div>
             <FilmSelector
               value={params.filmType}
-              onChange={(value) => dispatch({ type: 'SET_PARAM', param: 'filmType', value })}
+              onChange={handleFilmChange}
               onPreview={setPreviewFilmType}
             />
 

@@ -35,6 +35,10 @@ const filmTypeToInt: Record<FilmType, number> = {
   'tmax': 21,
   'acros': 22,
   'pan-f': 23,
+  // Recipes (24-26)
+  'kodak-2383': 24,
+  'lomochrome-purple': 25,
+  'reala-ace': 26,
 };
 
 export class WebGLEngine {

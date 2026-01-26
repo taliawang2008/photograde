@@ -312,6 +312,57 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainSize: 0.35,
     isBlackAndWhite: true,
   },
+
+  // ==================== SPECIAL RECIPES ====================
+
+  'kodak-2383': {
+    name: 'Kodak 2383 Print Film',
+    shadowShift: { r: -0.02, g: -0.01, b: 0.02 }, // Teal shadows
+    highlightShift: { r: 0.02, g: 0.01, b: -0.01 }, // Warm highlights
+    contrast: 1.25, // High contrast print look
+    saturation: 1.1,
+    warmth: 0.05,
+    grainAmount: 0.015,
+    grainSize: 0.4,
+    acutance: 0.1,
+    isBlackAndWhite: false,
+    colorMatrix: [
+      1.1, -0.05, -0.05,
+      -0.05, 1.1, -0.05,
+      -0.05, -0.05, 1.1
+    ],
+  },
+
+  'lomochrome-purple': {
+    name: 'LomoChrome Purple',
+    shadowShift: { r: 0.05, g: 0.0, b: 0.05 }, // Magenta tint
+    highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
+    contrast: 1.1,
+    saturation: 1.2,
+    warmth: 0.0,
+    grainAmount: 0.03,
+    grainSize: 0.7,
+    acutance: 0.1,
+    isBlackAndWhite: false,
+    colorMatrix: [
+      1.0, 1.0, 0.0,
+      0.0, 0.1, 0.0,
+      0.0, 0.8, 1.0
+    ],
+  },
+
+  'reala-ace': {
+    name: 'Fujifilm Reala Ace',
+    shadowShift: { r: 0.0, g: 0.01, b: 0.0 },
+    highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
+    contrast: 1.05,
+    saturation: 1.0,
+    warmth: -0.02,
+    grainAmount: 0.01,
+    grainSize: 0.3,
+    acutance: 0.3,
+    isBlackAndWhite: false,
+  },
 };
 
 // 获取胶片显示名称
@@ -351,4 +402,8 @@ export const filmTypeList: { value: FilmType; label: string; category: 'color' |
   { value: 'tmax', label: 'T-Max 100', category: 'bw' },
   { value: 'acros', label: 'Acros 100', category: 'bw' },
   { value: 'pan-f', label: 'Pan F 50', category: 'bw' },
+  // Recipes
+  { value: 'kodak-2383', label: 'Kodak 2383 (Cinema)', category: 'cinema' },
+  { value: 'lomochrome-purple', label: 'LomoChrome Purple', category: 'color' },
+  { value: 'reala-ace', label: 'Reala Ace', category: 'color' },
 ];
