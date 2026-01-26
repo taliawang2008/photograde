@@ -1112,16 +1112,19 @@ export const fragmentShaderSource = `
     // 10. 胶片模拟 (Hybrid: Matrix + Algorithmic)
     // First apply 3x3 Matrix if enabled (Channel Crosstalk)
     if (u_useFilmColorMatrix) {
-      color = applyFilmColorMatrix(color, u_filmColorMatrix);
+      vec3 matColor = applyFilmColorMatrix(color, u_filmColorMatrix);
+      color = mix(color, matColor, u_filmStrength);
     }
     // Then apply algorithmic adjustments (Contrast, Saturation, Tint)
     color = applyFilmEmulation(color, u_filmType, u_filmStrength);
 
     // 11. S-Curve 色调映射 (胶片响应)
-    color = applyFilmToneMapping(color, u_filmToe, u_filmShoulder);
+    vec3 toneMapped = applyFilmToneMapping(color, u_filmToe, u_filmShoulder);
+    color = mix(color, toneMapped, u_filmStrength);
 
     // 12. 色彩交叉偏移
-    color = applyCrossover(color, u_crossoverShift);
+    vec3 crossed = applyCrossover(color, u_crossoverShift);
+    color = mix(color, crossed, u_filmStrength);
 
     // 13. Fade 褪色
     color = applyFade(color, u_fade);

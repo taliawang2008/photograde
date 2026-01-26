@@ -420,8 +420,6 @@ function App() {
             </div>
 
             {/* Film Type Dropdown with Live Preview */}
-            {/* 胶片模拟 */}
-            <div className="section-title">🎞️ Film Emulation</div>
             <FilmSelector
               value={params.filmType}
               onChange={handleFilmChange}
