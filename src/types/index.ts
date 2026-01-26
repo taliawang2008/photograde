@@ -113,6 +113,9 @@ export interface GradingParams {
   // === 颗粒效果 ===
   grainAmount: number;   // 0 to 100
   grainSize: number;     // 0 to 100
+  grainChromacity: number; // 0 to 100 (0=Mono, 100=Color)
+  grainHighlights: number; // 0 to 100 (Grain strength in highlights)
+  grainShadows: number;    // 0 to 100 (Grain strength in shadows)
   acutance: number;      // 0 to 100 (Edge sharpness/development effect)
 
   // === 特效 ===
@@ -204,6 +207,9 @@ export const defaultGradingParams: GradingParams = {
   // 颗粒
   grainAmount: 0,
   grainSize: 50,
+  grainChromacity: 60,   // Default color grain
+  grainHighlights: 20,   // Less grain in highlights
+  grainShadows: 80,      // More grain in shadows
   acutance: 0,
 
   // 特效
@@ -235,6 +241,9 @@ export interface FilmProfile {
   // 颗粒
   grainAmount: number;
   grainSize: number;
+  grainChromacity?: number;
+  grainHighlights?: number;
+  grainShadows?: number;
   acutance?: number; // Optional default acutance for this film
   // 是否黑白
   isBlackAndWhite: boolean;

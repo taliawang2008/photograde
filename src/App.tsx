@@ -426,7 +426,16 @@ function App() {
             {/* 特效 */}
             <div className="subsection-title">✨ Effects</div>
             <ParamSlider dispatch={dispatch} label="Grain Amount" value={params.grainAmount} min={0} max={100} param="grainAmount" />
-            <ParamSlider dispatch={dispatch} label="Grain Size" value={params.grainSize} min={0} max={100} param="grainSize" />
+
+            {params.grainAmount > 0 && (
+              <div style={{ paddingLeft: '10px', borderLeft: '2px solid #333', marginBottom: '10px' }}>
+                <ParamSlider dispatch={dispatch} label="Size" value={params.grainSize} min={0} max={100} param="grainSize" />
+                <ParamSlider dispatch={dispatch} label="Chromacity (Color)" value={params.grainChromacity ?? 60} min={0} max={100} param="grainChromacity" />
+                <ParamSlider dispatch={dispatch} label="Highlights" value={params.grainHighlights ?? 20} min={0} max={100} param="grainHighlights" />
+                <ParamSlider dispatch={dispatch} label="Shadows" value={params.grainShadows ?? 80} min={0} max={100} param="grainShadows" />
+              </div>
+            )}
+
             <ParamSlider dispatch={dispatch} label="Acutance (Sharpness)" value={params.acutance} min={0} max={100} param="acutance" />
             <ParamSlider dispatch={dispatch} label="Halation" value={params.halation} min={0} max={100} param="halation" />
             {params.halation > 0 && (

@@ -124,6 +124,7 @@ export class WebGLEngine {
       'u_filmToe', 'u_filmShoulder', 'u_crossoverShift',
       // 颗粒效果
       'u_grainAmount', 'u_grainSize', 'u_time',
+      'u_grainChromacity', 'u_grainHighlights', 'u_grainShadows', // New Advanced Grain
       'u_acutance', 'u_texSize', // New uniforms
       // 特效
       'u_fade', 'u_halation', 'u_halationColor', 'u_halationThreshold', 'u_halationRadius',
@@ -328,6 +329,11 @@ export class WebGLEngine {
     this.gl.uniform1f(this.uniforms['u_grainAmount']!, (params.grainAmount || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_grainSize']!, (params.grainSize || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_time']!, performance.now() / 1000.0);
+
+    // Advanced Grain
+    this.gl.uniform1f(this.uniforms['u_grainChromacity']!, (params.grainChromacity ?? 60) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_grainHighlights']!, (params.grainHighlights ?? 20) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_grainShadows']!, (params.grainShadows ?? 80) / 100.0);
 
     // Acutance
     // Use film profile default if available and not overridden (logic could be more complex, but here we just use params.acutance)

@@ -63,6 +63,9 @@ export const fragmentShaderSource = `
   // === 颗粒效果 ===
   uniform float u_grainAmount;       // 0.0 to 1.0
   uniform float u_grainSize;         // 0.0 to 1.0
+  uniform float u_grainChromacity;   // 0.0 to 1.0
+  uniform float u_grainHighlights;   // 0.0 to 1.0
+  uniform float u_grainShadows;      // 0.0 to 1.0
 
   uniform float u_acutance;          // 0.0 to 1.0 (Edge sharpening)
   uniform vec2 u_texSize;            // Texture dimensions for sampling
@@ -877,38 +880,38 @@ export const fragmentShaderSource = `
   }
 
   // 13. Professional Film Grain (专业级胶片颗粒 - 多层彩色噪声)
+  // 13. Professional Film Grain (专业级胶片颗粒 - 多层彩色噪声)
   vec3 applyProfessionalGrain(vec3 color, float amount, float size, vec2 uv, float time) {
     if (amount <= 0.0) return color;
 
-    // 基于尺寸调整采样频率
+    // Based on size
     float baseScale = mix(600.0, 150.0, size);
     
-    // 多层噪声叠加 (模拟真实胶片银盐颗粒的复杂分布)
-    
-    // 大颗粒层 (结构性噪声)
+    // Multi-layer noise
     vec2 largeCoord = uv * baseScale * 0.5 + time * 8.0;
     float largGrain = noise(largeCoord) * 2.0 - 1.0;
     
-    // 中颗粒层 (主要纹理)
     vec2 mediumCoord = uv * baseScale + time * 12.0;
     float mediumGrain = noise(mediumCoord) * 2.0 - 1.0;
     
-    // 细颗粒层 (细节)
     vec2 fineCoord = uv * baseScale * 2.0 + time * 16.0;
     float fineGrain = noise(fineCoord) * 2.0 - 1.0;
     
-    // 合成多层噪声 (不同权重)
+    // Composite
     float finalGrain = largGrain * 0.3 + mediumGrain * 0.5 + fineGrain * 0.2;
     
-    // 亮度自适应 - 符合真实胶片特性
-    // 暗部: 颗粒更明显, 更粗
-    // 高光: 颗粒被压缩, 更细
+    // Luminance Adaptation (Advanced Params)
     float lum = getLuminance(color);
-    float shadowGrainBoost = 1.0 + (1.0 - lum) * 0.8;  // 暗部增强
-    float highlightGrainReduce = 1.0 - smoothstep(0.7, 1.0, lum) * 0.5;  // 高光抑制
-    float lumFactor = shadowGrainBoost * highlightGrainReduce;
+    // shadow grain: if u_grainShadows is high (1.0), boost darks. if low (0.0), reduce.
+    // Default was 1.0+(1-l)*0.8. Let's map u_grainShadows (0-1) to roughly 0.0 to 2.0 multiplier at darks.
+    float shadowFactor = 1.0 + (1.0 - lum) * (u_grainShadows * 2.0 - 0.5); // Range adjustment
     
-    // 彩色颗粒 (RGB通道独立噪声, 模拟CMY染料层)
+    // highlight grain: if u_grainHighlights is low (0.0), cut grain in brights.
+    float highlightFactor = 1.0 - smoothstep(0.6, 1.0, lum) * (1.0 - u_grainHighlights);
+    
+    float lumFactor = max(0.0, shadowFactor * highlightFactor);
+    
+    // Chroma Noise
     vec3 colorGrain;
     colorGrain.r = finalGrain;
     colorGrain.g = noise(mediumCoord + vec2(127.1, 311.7)) * 2.0 - 1.0;
@@ -916,13 +919,14 @@ export const fragmentShaderSource = `
     colorGrain.b = noise(mediumCoord + vec2(269.5, 183.3)) * 2.0 - 1.0;
     colorGrain.b = colorGrain.b * 0.3 + mediumGrain * 0.5 + fineGrain * 0.2;
     
-    // 颜色通道间的轻微相关性 (真实胶片特征)
-    colorGrain = mix(colorGrain, vec3(finalGrain), 0.4);
+    // Mix Mono vs Color based on Chromacity param
+    vec3 mixedGrain = mix(vec3(finalGrain), colorGrain, u_grainChromacity);
     
-    // 应用颗粒
-    color += colorGrain * amount * 0.12 * lumFactor;
-
-    return clamp(color, 0.0, 1.0);
+    // Apply (Soft Light / Overlay-like or simple add)
+    // Standard addition with luminance scaling
+    vec3 grainColor = color + mixedGrain * amount * 0.15 * lumFactor;
+    
+    return clamp(grainColor, 0.0, 1.0);
   }
 
   // 14. S-Curve 色调映射 (电影级胶片响应)
