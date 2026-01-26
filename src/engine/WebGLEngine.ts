@@ -124,6 +124,7 @@ export class WebGLEngine {
       'u_filmToe', 'u_filmShoulder', 'u_crossoverShift',
       // 颗粒效果
       'u_grainAmount', 'u_grainSize', 'u_time',
+      'u_acutance', 'u_texSize', // New uniforms
       // 特效
       'u_fade', 'u_halation', 'u_halationColor', 'u_halationThreshold', 'u_halationRadius',
       'u_bloom', 'u_diffusion', 'u_vignette', 'u_vignetteRadius',
@@ -327,6 +328,12 @@ export class WebGLEngine {
     this.gl.uniform1f(this.uniforms['u_grainAmount']!, (params.grainAmount || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_grainSize']!, (params.grainSize || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_time']!, performance.now() / 1000.0);
+
+    // Acutance
+    // Use film profile default if available and not overridden (logic could be more complex, but here we just use params.acutance)
+    // Actually params.acutance IS the source of truth, but we might initialize it from profile later.
+    this.gl.uniform1f(this.uniforms['u_acutance']!, (params.acutance || 0) / 100.0);
+    this.gl.uniform2f(this.uniforms['u_texSize']!, this.canvas.width, this.canvas.height);
 
     // === 特效 ===
     this.gl.uniform1f(this.uniforms['u_fade']!, (params.fade || 0) / 100.0);

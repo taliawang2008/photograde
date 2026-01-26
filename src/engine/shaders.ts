@@ -63,6 +63,9 @@ export const fragmentShaderSource = `
   // === 颗粒效果 ===
   uniform float u_grainAmount;       // 0.0 to 1.0
   uniform float u_grainSize;         // 0.0 to 1.0
+
+  uniform float u_acutance;          // 0.0 to 1.0 (Edge sharpening)
+  uniform vec2 u_texSize;            // Texture dimensions for sampling
   uniform float u_time;              // 动画时间
 
   // === 特效 ===
@@ -852,6 +855,27 @@ export const fragmentShaderSource = `
     return clamp(color, 0.0, 1.0);
   }
 
+  // 17.5 Film Acutance (Edge Sharpening)
+  vec3 applyAcutance(vec3 color, vec2 uv, float strength) {
+    if (strength <= 0.0) return color;
+    
+    vec2 step = 1.0 / u_texSize;
+    
+    // Sample neighbors (Cross kernel)
+    vec3 n = texture2D(u_image, uv + vec2(0.0, -step.y)).rgb;
+    vec3 s = texture2D(u_image, uv + vec2(0.0, step.y)).rgb;
+    vec3 e = texture2D(u_image, uv + vec2(step.x, 0.0)).rgb;
+    vec3 w = texture2D(u_image, uv + vec2(-step.x, 0.0)).rgb;
+    
+    // High-pass = Center - Average(Neighbors)
+    vec3 neighbors = (n + s + e + w) * 0.25;
+    vec3 detail = color - neighbors;
+    
+    // Add detail back to original (Unsharp Mask)
+    // Multiplier 4.0 makes 'strength 1.0' quite strong
+    return color + detail * strength * 4.0;
+  }
+
   // 13. Professional Film Grain (专业级胶片颗粒 - 多层彩色噪声)
   vec3 applyProfessionalGrain(vec3 color, float amount, float size, vec2 uv, float time) {
     if (amount <= 0.0) return color;
@@ -1109,6 +1133,9 @@ export const fragmentShaderSource = `
 
     // 17. Vignette 暗角
     color = applyVignette(color, u_vignette, u_vignetteRadius, v_texCoord);
+
+    // 17.5 Acutance (Edge Sharpening)
+    color = applyAcutance(color, v_texCoord, u_acutance);
 
     // 18. 颗粒 (专业版 - 最后应用)
     color = applyProfessionalGrain(color, u_grainAmount, u_grainSize, v_texCoord, u_time);

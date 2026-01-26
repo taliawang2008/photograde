@@ -13,6 +13,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     warmth: 0.18,
     grainAmount: 0.025,
     grainSize: 0.8,
+    acutance: 0.1, // Slight sharpening
     isBlackAndWhite: false,
     colorMatrix: [
       1.05, -0.05, 0.0,
@@ -190,6 +191,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     warmth: 0.02,
     grainAmount: 0.006,
     grainSize: 0.4,
+    acutance: 0.3, // High sharpness
     isBlackAndWhite: false,
   },
 
@@ -283,6 +285,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     warmth: 0.0,
     grainAmount: 0.012,
     grainSize: 0.5,
+    acutance: 0.4, // Very high acutance (T-Grain)
     isBlackAndWhite: true,
   },
 

@@ -427,6 +427,7 @@ function App() {
             <div className="subsection-title">✨ Effects</div>
             <ParamSlider dispatch={dispatch} label="Grain Amount" value={params.grainAmount} min={0} max={100} param="grainAmount" />
             <ParamSlider dispatch={dispatch} label="Grain Size" value={params.grainSize} min={0} max={100} param="grainSize" />
+            <ParamSlider dispatch={dispatch} label="Acutance (Sharpness)" value={params.acutance} min={0} max={100} param="acutance" />
             <ParamSlider dispatch={dispatch} label="Halation" value={params.halation} min={0} max={100} param="halation" />
             {params.halation > 0 && (
               <>

@@ -113,6 +113,7 @@ export interface GradingParams {
   // === 颗粒效果 ===
   grainAmount: number;   // 0 to 100
   grainSize: number;     // 0 to 100
+  acutance: number;      // 0 to 100 (Edge sharpness/development effect)
 
   // === 特效 ===
   useFilmColorMatrix: boolean; // Enable advanced film color matrix
@@ -203,6 +204,7 @@ export const defaultGradingParams: GradingParams = {
   // 颗粒
   grainAmount: 0,
   grainSize: 50,
+  acutance: 0,
 
   // 特效
   useFilmColorMatrix: true, // Default to true for better quality
@@ -233,6 +235,7 @@ export interface FilmProfile {
   // 颗粒
   grainAmount: number;
   grainSize: number;
+  acutance?: number; // Optional default acutance for this film
   // 是否黑白
   isBlackAndWhite: boolean;
 
