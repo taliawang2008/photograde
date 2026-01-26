@@ -113,8 +113,17 @@ export const fragmentShaderSource = `
   }
 
   // 伪随机数生成器
-  float random(vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+  // PHI constant for Gold Noise
+  const float PHI = 1.61803398874989484820459;
+
+  // Gold Noise - static noise with no pattern artifacts
+  float random(vec2 xy) {
+    return fract(tan(distance(xy * PHI, xy) * u_time) * xy.x);
+  }
+  
+  // High-performance pseudorandom for dithering (no time dependency by default)
+  float random_static(vec2 xy) {
+    return fract(tan(distance(xy * PHI, xy) * 1.0) * xy.x);
   }
 
   // 噪声函数
@@ -1161,10 +1170,17 @@ export const fragmentShaderSource = `
     float glowWeight = 0.0;
     float blurSize = radius * 0.00005; // Reduced 5x for finer control (0.00025 -> 0.00005)
     
+    // Dithering: Randomize offset per pixel to hide sample pattern
+    // Generate jitter in range [-0.5, 0.5]
+    float r1 = random_static(uv + vec2(0.123, 0.456));
+    float r2 = random_static(uv + vec2(0.789, 0.012));
+    vec2 jitter = (vec2(r1, r2) - 0.5) * 0.75; // Jitter magnitude
+    
     // 5x5 Grid for better quality (wider spread)
     for (float x = -2.0; x <= 2.0; x += 1.0) {
       for (float y = -2.0; y <= 2.0; y += 1.0) {
-        vec2 offset = vec2(x, y) * blurSize;
+        // Apply jitter to sample position
+        vec2 offset = (vec2(x, y) + jitter) * blurSize;
         vec3 sample = texture2D(u_image, uv + offset).rgb;
         float sampleLum = getLuminance(sample);
         
@@ -1354,11 +1370,15 @@ export const fragmentShaderSource = `
       float streakWeight = 0.0;
       float streakLength = glowRadius * 0.0002; // Reduced 5x (0.001 -> 0.0002)
       
+      // Dither streak samples to prevent "dotted line" look
+      float jitter = (random_static(uv + vec2(0.5, 0.5)) - 0.5) * 1.0;
+
       // Sample more points for better streak quality
       for (float i = -8.0; i <= 8.0; i += 1.0) {
         if (i == 0.0) continue; // Skip center pixel (avoid self-bloom)
         
-        vec2 offset = streakDir * i * streakLength;
+        // Apply jitter to step
+        vec2 offset = streakDir * (i + jitter) * streakLength;
         vec3 sample = texture2D(u_image, uv + offset).rgb;
         float sampleLum = getLuminance(sample);
         
