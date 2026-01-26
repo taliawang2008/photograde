@@ -12,6 +12,7 @@ export type FilmType =
   | 'none'
   // Kodak Color Negative
   | 'amber-gold'
+  | 'autumn-breeze'
   | 'portrait-160'
   | 'portrait-400'
   | 'portrait-800'
@@ -119,6 +120,7 @@ export interface GradingParams {
   // === 颗粒效果 ===
   grainAmount: number;   // 0 to 100
   grainSize: number;     // 0 to 100
+  grainRoughness: number; // 0 to 100 (New: Texture complexity/octaves)
   grainChromacity: number; // 0 to 100 (0=Mono, 100=Color)
   grainHighlights: number; // 0 to 100 (Grain strength in highlights)
   grainShadows: number;    // 0 to 100 (Grain strength in shadows)
@@ -213,6 +215,7 @@ export const defaultGradingParams: GradingParams = {
   // 颗粒
   grainAmount: 0,
   grainSize: 50,
+  grainRoughness: 50,    // Default medium roughness
   grainChromacity: 60,   // Default color grain
   grainHighlights: 20,   // Less grain in highlights
   grainShadows: 80,      // More grain in shadows
@@ -247,6 +250,7 @@ export interface FilmProfile {
   // 颗粒
   grainAmount: number;
   grainSize: number;
+  grainRoughness?: number; // Optional override for specific stocks
   grainChromacity?: number;
   grainHighlights?: number;
   grainShadows?: number;
@@ -270,6 +274,12 @@ export interface FilmProfile {
   // Misc overrides
   saturationOverride?: number; // Override saturation param
   contrastOverride?: number; // Override contrast param
+
+  // Halation Overrides
+  halation?: number;
+  halationColor?: string;
+  halationThreshold?: number;
+  halationRadius?: number;
 }
 
 // Action 类型 (用于 useReducer)

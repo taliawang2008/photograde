@@ -45,7 +45,7 @@ const FilmSelector: React.FC<FilmSelectorProps> = ({ value, onChange, onPreview 
         {
             name: 'F-Series (Verdant)',
             icon: '📷',
-            films: filmTypeList.filter(f => ['verdant-400', 'f-portrait-400', 'f-c200', 'reala-ace'].includes(f.value)),
+            films: filmTypeList.filter(f => ['autumn-breeze', 'verdant-400', 'f-portrait-400', 'f-c200', 'reala-ace'].includes(f.value)),
         },
         {
             name: 'Slide (Chrome)',

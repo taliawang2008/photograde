@@ -20,6 +20,11 @@ const MAT_FUJI: Mat3 = [
   0.0, 1.02, -0.02,
   0.0, 0.05, 1.05
 ];
+const MAT_AUTUMN: Mat3 = [
+  1.15, -0.1, -0.05,  // Red boosts, Green cuts
+  0.2, 0.85, -0.05,   // Green shifts to Red (Yellow)
+  -0.05, -0.05, 1.1   // Blue boosts slightly
+];
 
 export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
   // ==================== COLOR NEGATIVE ====================
@@ -33,9 +38,41 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     warmth: 0.18,
     grainAmount: 0.025,
     grainSize: 0.8,
+    grainRoughness: 0.6, // Standard negative
     acutance: 0.1, // Slight sharpening
     isBlackAndWhite: false,
     colorMatrix: MAT_WARM,
+  },
+
+  'autumn-breeze': {
+    name: 'F-Autumn Breeze',
+    shadowShift: { r: -0.02, g: 0.01, b: 0.03 }, // Teal shadows
+    highlightShift: { r: 0.04, g: 0.02, b: -0.03 }, // Creamy warm highlights
+    contrast: 0.95, // Soft midtones
+    saturation: 1.1, // Golden hour boost
+    warmth: 0.20, // Very warm
+    grainAmount: 0.03,
+    grainSize: 0.75,
+    grainRoughness: 0.4, // Organic/Cloudy
+    isBlackAndWhite: false,
+    colorMatrix: MAT_AUTUMN, // Green -> Olive shift
+
+    // Recipe: Matte Shadow & Dreamy Glow
+    curves: {
+      rgb: [
+        { x: 0, y: 30 },    // Lifted blacks (Matte)
+        { x: 50, y: 65 },   // Soft shadows
+        { x: 128, y: 128 }, // Neutral mids
+        { x: 255, y: 245 }  // Soft whites
+      ],
+      red: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
+      green: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
+      blue: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
+    },
+    halation: 0.35,
+    halationRadius: 0.6,
+    halationThreshold: 0.2, // Glows easily
+    halationColor: '#FF9955', // Warm sunset glow
   },
 
   'portrait-160': {
@@ -59,6 +96,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     warmth: 0.05,
     grainAmount: 0.018,
     grainSize: 0.9,
+    grainRoughness: 0.3, // Very smooth T-Grain
     isBlackAndWhite: false,
     colorMatrix: MAT_PORTRAIT,
   },
@@ -269,6 +307,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     warmth: 0.0,
     grainAmount: 0.03,
     grainSize: 0.9,
+    grainRoughness: 0.9, // Classic Cubic Grain - Rough/Sharp
     isBlackAndWhite: true,
   },
 
@@ -382,6 +421,7 @@ export function getFilmDisplayName(type: FilmType): string {
 // 胶片类型列表 (用于 UI) - 分类展示
 export const filmTypeList: { value: FilmType; label: string; category: 'color' | 'slide' | 'cinema' | 'bw' }[] = [
   { value: 'none', label: 'None', category: 'color' },
+  { value: 'autumn-breeze', label: 'F-Autumn Breeze (New)', category: 'color' },
   // Color Negative
   { value: 'amber-gold', label: 'K-Amber Gold 200 (Pro)', category: 'color' },
   { value: 'portrait-160', label: 'P-Portrait 160', category: 'color' },

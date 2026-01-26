@@ -6,11 +6,12 @@ import { Histogram, calculateHistogram } from './components/Histogram';
 import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
-import { filmProfiles } from './engine/filmProfiles';
+import { filmProfiles, filmTypeList, getFilmDisplayName } from './engine/filmProfiles';
 import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { filmCharacterPresets } from './engine/filmPresets';
 import { useDebouncedLocalStorage, getStoredValue } from './hooks/useLocalStorage';
+import { calculateImageStats, computeAutoParams } from './engine/AutoGrade';
 import type {
   GradingParams,
   GradingAction,
@@ -21,6 +22,7 @@ import type {
   FilmType,
   LogProfile,
   ACESOutputTransform,
+  CurvePoint, // Added CurvePoint type
 } from './types';
 import { acesOutputTransforms } from './engine/acesProfiles';
 import { defaultGradingParams } from './types';
@@ -163,7 +165,11 @@ function App() {
   }, []);
 
   // 自动保存参数到 localStorage
-  useDebouncedLocalStorage('vlog-grading-params', params, 500);
+  const [lutName, setLutName] = useState<string>(''); // Display name for loaded LUT
+
+  // Auto-Normalize State
+  const [isNormalized, setIsNormalized] = useState(false);
+  const [autoParams, setAutoParams] = useState<Partial<GradingParams> | null>(null);
 
   // 初始化 WebGL 引擎
   useEffect(() => {
@@ -287,6 +293,18 @@ function App() {
       if (profile.acutance !== undefined) {
         dispatch({ type: 'SET_PARAM', param: 'acutance', value: profile.acutance * 100 });
       }
+      if (profile.halation !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'halation', value: profile.halation * 100 });
+      }
+      if (profile.halationColor !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'halationColor', value: profile.halationColor });
+      }
+      if (profile.halationThreshold !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'halationThreshold', value: profile.halationThreshold * 100 });
+      }
+      if (profile.halationRadius !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'halationRadius', value: profile.halationRadius * 100 });
+      }
     }
   };
 
@@ -329,16 +347,27 @@ function App() {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          engineRef.current?.loadImage(img);
           setImageLoaded(true);
+          engineRef.current?.loadImage(img);
 
-          // 初始化直方图
-          setTimeout(() => {
-            const pixels = engineRef.current?.getPixelData();
-            if (pixels) {
-              setHistogramData(calculateHistogram(pixels));
-            }
-          }, 100);
+          // Analyze Source Image for Auto-Normalization
+          // We do this on the raw image source to avoid "stacking" effects from previous grades
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            // Sample data (resize if too big to optimize?)
+            // For now, full res or simple downsample
+            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+            // new Uint8Array(buffer) creates a view, no copy
+            const dataArray = new Uint8Array(imageData.data.buffer);
+            const stats = calculateImageStats(dataArray, img.width, img.height);
+            const params = computeAutoParams(stats);
+            setAutoParams(params);
+            setIsNormalized(false); // Reset toggle on new image
+          }
         };
         img.src = event.target?.result as string;
       };
@@ -385,6 +414,31 @@ function App() {
     setCustomLUT(null);
     engineRef.current?.clear3DLUT();
   }, []);
+
+  // Auto Normalize Toggle Logic
+  const handleToggleNormalize = useCallback(() => {
+    if (!autoParams) return;
+
+    const newState = !isNormalized;
+    setIsNormalized(newState);
+
+    if (newState) {
+      // Apply Auto Params
+      dispatch({ type: 'MERGE_PARAMS', params: autoParams });
+    } else {
+      // Revert to neutral for these specific params
+      // Note: This might overwrite manual adjustments made *after* normalizing. 
+      // A simple "Off" just turning off the bias is usually what's expected in this context.
+      dispatch({
+        type: 'MERGE_PARAMS', params: {
+          exposure: 0,
+          contrast: 0,
+          temperature: 0,
+          tint: 0
+        }
+      });
+    }
+  }, [isNormalized, autoParams]);
 
 
 
@@ -439,6 +493,28 @@ function App() {
                   Clear LUT
                 </button>
               )}
+            </div>
+            {/* Phase 12: Auto Normalize Checkbox */}
+            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="checkbox"
+                id="autoNormalize"
+                checked={isNormalized}
+                onChange={handleToggleNormalize}
+                disabled={!imageLoaded || !autoParams}
+                style={{ width: 'auto', marginRight: '8px', cursor: (imageLoaded && autoParams) ? 'pointer' : 'not-allowed' }}
+              />
+              <label
+                htmlFor="autoNormalize"
+                style={{
+                  fontSize: '12px',
+                  color: isNormalized ? '#667eea' : '#ccc',
+                  fontWeight: isNormalized ? 600 : 400,
+                  cursor: (imageLoaded && autoParams) ? 'pointer' : 'not-allowed'
+                }}
+              >
+                ✨ Auto Normalize Input
+              </label>
             </div>
           </div>
 
@@ -515,6 +591,14 @@ function App() {
                 {params.grainAmount > 0 && (
                   <div style={{ paddingLeft: '10px', borderLeft: '2px solid #333', marginTop: '4px', marginBottom: '10px' }}>
                     <ParamSlider dispatch={dispatch} label="Size" value={params.grainSize} min={0} max={100} param="grainSize" />
+                    <ParamSlider
+                      dispatch={dispatch}
+                      label="Roughness"
+                      value={params.grainRoughness ?? 50}
+                      min={0}
+                      max={100}
+                      param="grainRoughness"
+                    />
                     <ParamSlider dispatch={dispatch} label="Chromacity (Color)" value={params.grainChromacity ?? 60} min={0} max={100} param="grainChromacity" />
                     <ParamSlider dispatch={dispatch} label="Highlights" value={params.grainHighlights ?? 20} min={0} max={100} param="grainHighlights" />
                     <ParamSlider dispatch={dispatch} label="Shadows" value={params.grainShadows ?? 80} min={0} max={100} param="grainShadows" />

@@ -127,7 +127,7 @@ export class WebGLEngine {
       // 高级胶片响应
       'u_filmToe', 'u_filmShoulder', 'u_crossoverShift',
       // 颗粒效果
-      'u_grainAmount', 'u_grainSize', 'u_time',
+      'u_grainAmount', 'u_grainSize', 'u_time', 'u_grainRoughness', // New uniform
       'u_grainChromacity', 'u_grainHighlights', 'u_grainShadows', // New Advanced Grain
       'u_acutance', 'u_texSize', // New uniforms
       // 特效
@@ -332,6 +332,7 @@ export class WebGLEngine {
     // === 颗粒效果 ===
     this.gl.uniform1f(this.uniforms['u_grainAmount']!, (params.grainAmount || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_grainSize']!, (params.grainSize || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_grainRoughness']!, (params.grainRoughness ?? 50) / 100.0); // Default to 0.5
     this.gl.uniform1f(this.uniforms['u_time']!, performance.now() / 1000.0);
 
     // Advanced Grain

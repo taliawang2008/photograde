@@ -63,6 +63,7 @@ export const fragmentShaderSource = `
   // === 颗粒效果 ===
   uniform float u_grainAmount;       // 0.0 to 1.0
   uniform float u_grainSize;         // 0.0 to 1.0
+  uniform float u_grainRoughness;    // 0.0 to 1.0 (New: Controls noise complexity)
   uniform float u_grainChromacity;   // 0.0 to 1.0
   uniform float u_grainHighlights;   // 0.0 to 1.0
   uniform float u_grainShadows;      // 0.0 to 1.0
@@ -879,54 +880,136 @@ export const fragmentShaderSource = `
     return color + detail * strength * 4.0;
   }
 
-  // 13. Professional Film Grain (专业级胶片颗粒 - 多层彩色噪声)
-  // 13. Professional Film Grain (专业级胶片颗粒 - 多层彩色噪声)
-  vec3 applyProfessionalGrain(vec3 color, float amount, float size, vec2 uv, float time) {
+  // 13. Organic Film Grain (Organic Dye Cloud Simulation)
+  // Uses Simplex-like noise for natural clumping and density-dependent masking
+  
+  // Pseudo-random function (canonical)
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
+  // Value Noise (Standard 2D)
+  float valueNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+
+  // Simplex Noise (2D Approximation) - Faster and more organic than Perlin
+  vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+  float snoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+    vec2 i  = floor(v + dot(v, C.yy) );
+    vec2 x0 = v -   i + dot(i, C.xx);
+    vec2 i1;
+    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+    i = mod(i, 289.0);
+    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m ;
+    m = m*m ;
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+  }
+
+  // FBM (Fractal Brownian Motion) for layering grain structure
+  float fbm(vec2 uv, int octaves, float roughness) {
+      float value = 0.0;
+      float amplitude = 0.5;
+      float frequency = 1.0;
+      
+      for (int i = 0; i < 4; i++) { // Limit to 4 loops max for perf, controlled by octaves
+          if (i >= octaves) break;
+          // Use Simplex for organic "cloudy" feel or Value for "digital" feel
+          // Mixing them gives best film emulation
+          value += snoise(uv * frequency) * amplitude;
+          frequency *= 2.0;
+          // Roughness controls amplitude decay (High roughness = noisier octaves)
+          amplitude *= 0.5 * (1.0 + roughness); 
+      }
+      return value;
+  }
+
+  vec3 applyOrganicGrain(vec3 color, float amount, float size, float roughness, vec2 uv, float time) {
     if (amount <= 0.0) return color;
 
-    // Based on size
-    float baseScale = mix(600.0, 150.0, size);
+    // Base grain scale (smaller = finer)
+    float baseScale = mix(1000.0, 200.0, size);
     
-    // Multi-layer noise
-    vec2 largeCoord = uv * baseScale * 0.5 + time * 8.0;
-    float largGrain = noise(largeCoord) * 2.0 - 1.0;
+    // Animate grain (film runs at 24fps) - quantize time to create "film flutter"
+    // float frameTime = floor(time * 24.0); // 24fps strobe
+    float frameTime = time * 10.0; // Smooth scroll usually better for UI viewing
     
-    vec2 mediumCoord = uv * baseScale + time * 12.0;
-    float mediumGrain = noise(mediumCoord) * 2.0 - 1.0;
-    
-    vec2 fineCoord = uv * baseScale * 2.0 + time * 16.0;
-    float fineGrain = noise(fineCoord) * 2.0 - 1.0;
-    
-    // Composite
-    float finalGrain = largGrain * 0.3 + mediumGrain * 0.5 + fineGrain * 0.2;
-    
-    // Luminance Adaptation (Advanced Params)
+    // === Luminance Masking (Density Response) ===
+    // Real film: Grain is most visible in mid-densities.
+    // Negative film: Darks (transparent on neg) have less grain structure than Mids.
+    // Highlights (dense on neg) can be grainy but often "blocked up".
     float lum = getLuminance(color);
-    // shadow grain: if u_grainShadows is high (1.0), boost darks. if low (0.0), reduce.
-    // Default was 1.0+(1-l)*0.8. Let's map u_grainShadows (0-1) to roughly 0.0 to 2.0 multiplier at darks.
-    float shadowFactor = 1.0 + (1.0 - lum) * (u_grainShadows * 2.0 - 0.5); // Range adjustment
     
-    // highlight grain: if u_grainHighlights is low (0.0), cut grain in brights.
-    float highlightFactor = 1.0 - smoothstep(0.6, 1.0, lum) * (1.0 - u_grainHighlights);
+    // Custom curve: Fade grain in deep blacks and pure whites
+    // Peak grain visibility at 0.3-0.7 luminance
+    float responseCurve = 1.0 - pow(abs(lum - 0.5) * 2.0, 2.5);
     
-    float lumFactor = max(0.0, shadowFactor * highlightFactor);
+    // User overrides (Shadows/Highlights sliders)
+    // Map existing uniforms (u_grainShadows/Highlights) to this response
+    // If u_grainShadows is high, boost low-end response
+    float shadowMask = smoothstep(0.0, 0.5, lum);
+    float highlightMask = 1.0 - smoothstep(0.5, 1.0, lum);
     
-    // Chroma Noise
-    vec3 colorGrain;
-    colorGrain.r = finalGrain;
-    colorGrain.g = noise(mediumCoord + vec2(127.1, 311.7)) * 2.0 - 1.0;
-    colorGrain.g = colorGrain.g * 0.3 + mediumGrain * 0.5 + fineGrain * 0.2;
-    colorGrain.b = noise(mediumCoord + vec2(269.5, 183.3)) * 2.0 - 1.0;
-    colorGrain.b = colorGrain.b * 0.3 + mediumGrain * 0.5 + fineGrain * 0.2;
+    // Combined mask
+    float densityMask = responseCurve; 
+    // Mix in user overrides
+    densityMask = mix(densityMask, 1.0, u_grainShadows * (1.0 - shadowMask)); // Boost shadow grain if requested
+    densityMask = mix(densityMask, 1.0, u_grainHighlights * (1.0 - highlightMask));
     
-    // Mix Mono vs Color based on Chromacity param
-    vec3 mixedGrain = mix(vec3(finalGrain), colorGrain, u_grainChromacity);
+    densityMask = clamp(densityMask, 0.2, 1.0); // Never fully zero, film always has some base fog
+
+    // === Channel Independent Grain (Dye Clouds) ===
+    // offset channels to simulate dye layer depth
+    vec2 uvR = uv * baseScale + vec2(0.0, frameTime);
+    vec2 uvG = uv * baseScale + vec2(15.2, frameTime + 5.2);
+    vec2 uvB = uv * baseScale * 0.85 + vec2(100.0, frameTime + 10.5); // Blue grain usually larger
     
-    // Apply (Soft Light / Overlay-like or simple add)
-    // Standard addition with luminance scaling
-    vec3 grainColor = color + mixedGrain * amount * 0.15 * lumFactor;
+    // Generate Simplex noise for each channel
+    // Octaves depend on "roughness" (Tri-X uses more octaves for sharper edges)
+    int octaves = int(mix(1.0, 4.0, roughness));
     
-    return clamp(grainColor, 0.0, 1.0);
+    float noiseR = fbm(uvR, octaves, roughness);
+    float noiseG = fbm(uvG, octaves, roughness);
+    float noiseB = fbm(uvB, octaves, roughness);
+    
+    vec3 grainVec = vec3(noiseR, noiseG, noiseB);
+    
+    // Normalize noise center (0.0 center)
+    // Scale intensity
+    grainVec *= amount * 0.4; // Multiplier to match previous visual scale
+    
+    // === Application Mode ===
+    // Film grain is multiplicative in density (Log), but in Linear it looks like Soft Light
+    // Simplified Overlay/SoftLight approximation:
+    // color + (2*color - 1) * grain? No, simplified addition proportional to sqrt(lum) is physically close enough for real-time
+    
+    // Chroma Control: Mono vs Color grain
+    float lumaGrain = dot(grainVec, vec3(0.333));
+    vec3 finalGrain = mix(vec3(lumaGrain), grainVec, u_grainChromacity);
+    
+    // Apply masked grain
+    color += finalGrain * densityMask;
+    
+    return clamp(color, 0.0, 1.0);
   }
 
   // 14. S-Curve 色调映射 (电影级胶片响应)
@@ -1144,8 +1227,8 @@ export const fragmentShaderSource = `
     // 17.5 Acutance (Edge Sharpening)
     color = applyAcutance(color, v_texCoord, u_acutance);
 
-    // 18. 颗粒 (专业版 - 最后应用)
-    color = applyProfessionalGrain(color, u_grainAmount, u_grainSize, v_texCoord, u_time);
+    // 18. 颗粒 (Organic Dye Cloud Simulation - 最后应用)
+    color = applyOrganicGrain(color, u_grainAmount, u_grainSize, u_grainRoughness, v_texCoord, u_time);
 
     // 19. Output LUT (ODT / 最终色彩空间转换)
     if (u_useOutputLUT && u_outputLUTSize > 0.0) {
