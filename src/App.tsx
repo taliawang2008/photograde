@@ -133,6 +133,22 @@ function App() {
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Mobile panel navigation state
+  const [activePanel, setActivePanel] = useState<'left' | 'canvas' | 'right'>('canvas');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Touch gesture state for pinch-to-zoom
+  const initialPinchDistanceRef = useRef<number | null>(null);
+  const initialZoomRef = useRef<number>(100);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // 自动保存参数到 localStorage
   useDebouncedLocalStorage('vlog-grading-params', params, 500);
 
@@ -277,9 +293,24 @@ function App() {
 
   return (
     <div className="container">
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <div className="mobile-header-content">
+          <div className="mobile-header-title">Film Grade Pro</div>
+          <div className="mobile-header-actions">
+            <button className="mobile-action-btn" onClick={() => fileInputRef.current?.click()} title="Load Image">
+              📁
+            </button>
+            <button className="mobile-action-btn" onClick={() => handleExport('png')} title="Export">
+              💾
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="main-layout">
         {/* 左侧面板 */}
-        <div className="panel left-panel">
+        <div className={`panel left-panel${isMobile && activePanel === 'left' ? ' mobile-active' : ''}`}>
           {/* 文件加载 */}
           <div className="section">
             <div className="section-title">📁 Project</div>
@@ -400,7 +431,7 @@ function App() {
           )}
         </div>
 
-        {/* 中间面板 (Canvas) */}
+        {/* 中间面板 (Canvas) - Always visible, panels slide over */}
         <div className="image-panel">
           <div className="panel canvas-panel">
             <div
@@ -434,6 +465,46 @@ function App() {
               }}
               onMouseUp={() => setIsPanning(false)}
               onMouseLeave={() => setIsPanning(false)}
+              // Touch events for mobile pinch-to-zoom and pan
+              onTouchStart={(e) => {
+                if (e.touches.length === 2) {
+                  // Pinch start
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  initialPinchDistanceRef.current = Math.sqrt(dx * dx + dy * dy);
+                  initialZoomRef.current = zoom;
+                } else if (e.touches.length === 1 && zoom > 100) {
+                  // Pan start
+                  setIsPanning(true);
+                  panStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.touches.length === 2 && initialPinchDistanceRef.current) {
+                  // Pinch zoom
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  const newDistance = Math.sqrt(dx * dx + dy * dy);
+                  const scale = newDistance / initialPinchDistanceRef.current;
+                  const newZoom = Math.min(300, Math.max(10, initialZoomRef.current * scale));
+                  setZoom(newZoom);
+                } else if (e.touches.length === 1 && isPanning && panStartRef.current) {
+                  // Touch pan
+                  const dx = e.touches[0].clientX - panStartRef.current.x;
+                  const dy = e.touches[0].clientY - panStartRef.current.y;
+                  setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+                  panStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+              }}
+              onTouchEnd={(e) => {
+                if (e.touches.length < 2) {
+                  initialPinchDistanceRef.current = null;
+                }
+                if (e.touches.length === 0) {
+                  setIsPanning(false);
+                  panStartRef.current = null;
+                }
+              }}
             >
               <canvas
                 id="canvas"
@@ -473,7 +544,7 @@ function App() {
         </div>
 
         {/* 右侧面板 */}
-        <div className="panel right-panel">
+        <div className={`panel right-panel${isMobile && activePanel === 'right' ? ' mobile-active' : ''}`}>
           {/* 曲线编辑器 */}
           <div className="section">
             <div className="section-header">
@@ -526,6 +597,33 @@ function App() {
           </button>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-nav">
+        <div className="mobile-nav-tabs">
+          <button
+            className={`mobile-nav-tab${activePanel === 'left' ? ' active' : ''}`}
+            onClick={() => setActivePanel('left')}
+          >
+            <span className="mobile-nav-tab-icon">⚙️</span>
+            <span className="mobile-nav-tab-label">Settings</span>
+          </button>
+          <button
+            className={`mobile-nav-tab${activePanel === 'canvas' ? ' active' : ''}`}
+            onClick={() => setActivePanel('canvas')}
+          >
+            <span className="mobile-nav-tab-icon">🖼️</span>
+            <span className="mobile-nav-tab-label">Image</span>
+          </button>
+          <button
+            className={`mobile-nav-tab${activePanel === 'right' ? ' active' : ''}`}
+            onClick={() => setActivePanel('right')}
+          >
+            <span className="mobile-nav-tab-icon">🎨</span>
+            <span className="mobile-nav-tab-label">Tools</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

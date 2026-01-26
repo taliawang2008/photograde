@@ -1330,3 +1330,505 @@ button {
 .film-preview-tiny.pan-f {
     background: linear-gradient(135deg, #bbb 0%, #888 100%);
 }
+
+/* ==================== MOBILE EXPERIENCE ==================== */
+
+/* Mobile Navigation Tabs */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(26, 26, 26, 0.98);
+    border-top: 1px solid #2a2a2a;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 200;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+}
+
+.mobile-nav-tabs {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.mobile-nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    min-width: 72px;
+}
+
+.mobile-nav-tab:active {
+    transform: scale(0.95);
+}
+
+.mobile-nav-tab.active {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.mobile-nav-tab-icon {
+    font-size: 20px;
+}
+
+.mobile-nav-tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Header */
+.mobile-header {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(26, 26, 26, 0.98);
+    border-bottom: 1px solid #2a2a2a;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 200;
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+}
+
+.mobile-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.mobile-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.mobile-action-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: #2a2a2a;
+    border: none;
+    border-radius: 8px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mobile-action-btn:active {
+    background: #3a3a3a;
+    transform: scale(0.95);
+}
+
+/* Mobile Panel Container */
+.mobile-panel-wrapper {
+    display: none;
+}
+
+/* ==================== MOBILE BREAKPOINT (≤768px) ==================== */
+
+@media (max-width: 768px) {
+    body {
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .container {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    /* Hide desktop layout */
+    .main-layout {
+        display: block;
+        padding: 0;
+        gap: 0;
+        height: auto;
+        min-height: calc(100vh - 120px);
+        padding-top: calc(60px + env(safe-area-inset-top));
+        padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    }
+
+    /* Show mobile navigation */
+    .mobile-nav {
+        display: block;
+    }
+
+    .mobile-header {
+        display: block;
+    }
+
+    /* Hide desktop bottom bar */
+    .bottom-bar {
+        display: none;
+    }
+
+    /* Side Panels - Slide in from sides on mobile */
+    .left-panel,
+    .right-panel {
+        position: fixed;
+        top: calc(60px + env(safe-area-inset-top));
+        bottom: calc(70px + env(safe-area-inset-bottom));
+        width: 75%;
+        max-width: 320px;
+        height: auto;
+        z-index: 150;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: rgba(26, 26, 26, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.3s ease-out;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .left-panel {
+        left: 0;
+        right: auto;
+        transform: translateX(-100%);
+        border-radius: 0 16px 16px 0;
+    }
+
+    .right-panel {
+        right: 0;
+        left: auto;
+        transform: translateX(100%);
+        border-radius: 16px 0 0 16px;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .left-panel.mobile-active,
+    .right-panel.mobile-active {
+        transform: translateX(0);
+    }
+
+    /* Image Panel - Always visible on mobile */
+    .image-panel {
+        display: block;
+        height: calc(100vh - 130px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        padding: 10px;
+    }
+
+    /* Remove the hidden state - canvas always visible */
+    .image-panel.mobile-hidden {
+        display: block;
+    }
+
+    .canvas-panel {
+        height: 100%;
+        border-radius: 8px;
+    }
+
+    .canvas-container {
+        border-radius: 8px;
+    }
+
+    /* Touch-optimized sliders */
+    input[type="range"] {
+        height: 44px;
+        padding: 12px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+        margin-top: -10px;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 4px;
+    }
+
+    input[type="range"]::-moz-range-track {
+        height: 4px;
+    }
+
+    /* Touch-optimized buttons */
+    button {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+
+    .action-btn {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 12px;
+    }
+
+    .action-btn.small {
+        min-height: 40px;
+        padding: 10px 14px;
+    }
+
+    .reset-section-btn {
+        min-height: 36px;
+        padding: 8px 12px;
+    }
+
+    /* Touch-optimized tabs */
+    .tab,
+    .curve-tab,
+    .wheel-tab,
+    .wheel-mode-tab {
+        min-height: 44px;
+        padding: 12px 8px;
+    }
+
+    /* Larger section spacing for touch */
+    .section {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .slider-control {
+        margin-bottom: 16px;
+    }
+
+    .slider-label {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    /* Zoom controls - mobile optimized */
+    .zoom-controls {
+        bottom: 10px;
+        right: 10px;
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .zoom-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    /* Curve canvas - responsive */
+    .curve-canvas {
+        width: 100%;
+        max-width: 280px;
+        height: auto;
+        aspect-ratio: 1;
+    }
+
+    /* Color wheel - responsive */
+    .color-wheel-container {
+        max-width: 220px;
+        margin: 10px auto;
+    }
+
+    /* Film selector dropdown */
+    .film-dropdown-menu {
+        position: fixed;
+        bottom: calc(70px + env(safe-area-inset-bottom));
+        left: 10px;
+        right: 10px;
+        top: auto;
+        max-height: 60vh;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .film-categories-scroll {
+        max-height: 50vh;
+    }
+
+    /* File input */
+    .file-input-label {
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    /* Histogram */
+    .histogram-canvas {
+        height: 80px;
+    }
+
+    /* Panel styling */
+    .panel {
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    /* Placeholder text */
+    .placeholder {
+        padding: 40px 20px;
+        font-size: 16px;
+    }
+
+    .placeholder span {
+        font-size: 13px;
+    }
+}
+
+/* ==================== SMALL MOBILE (≤480px) ==================== */
+
+@media (max-width: 480px) {
+
+    /* Even larger touch targets */
+    input[type="range"]::-webkit-slider-thumb {
+        width: 28px;
+        height: 28px;
+        margin-top: -12px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 28px;
+        height: 28px;
+    }
+
+    .mobile-nav-tab {
+        min-width: 64px;
+        padding: 8px 12px;
+    }
+
+    .curve-canvas {
+        max-width: 240px;
+    }
+
+    .color-wheel-container {
+        max-width: 180px;
+    }
+
+    /* Tighter spacing on small screens */
+    .section {
+        padding: 12px;
+    }
+
+    .slider-control {
+        margin-bottom: 14px;
+    }
+}
+
+/* ==================== TABLET BREAKPOINT (769px - 1024px) ==================== */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-layout {
+        grid-template-columns: 240px 1fr 240px;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .curve-canvas {
+        width: 180px;
+        height: 180px;
+    }
+
+    .color-wheel-container {
+        max-width: 180px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 18px;
+        height: 18px;
+        margin-top: -7px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* ==================== TOUCH DEVICE ENHANCEMENTS ==================== */
+
+@media (hover: none) and (pointer: coarse) {
+
+    /* Increase all touch targets on touch devices */
+    button {
+        min-height: 44px;
+    }
+
+    .zoom-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    /* Disable hover effects that don't work well on touch */
+    .film-type-btn:hover,
+    .preset-btn:hover,
+    .action-btn:hover,
+    .zoom-btn:hover {
+        transform: none;
+    }
+
+    /* Better touch feedback */
+    .film-type-btn:active,
+    .preset-btn:active,
+    .action-btn:active,
+    .zoom-btn:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+    }
+}
+
+/* ==================== LANDSCAPE MOBILE ==================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .main-layout {
+        padding-top: calc(50px + env(safe-area-inset-top));
+        min-height: calc(100vh - 100px);
+    }
+
+    .left-panel.mobile-active,
+    .right-panel.mobile-active {
+        top: calc(50px + env(safe-area-inset-top));
+        bottom: calc(60px + env(safe-area-inset-bottom));
+    }
+
+    .image-panel {
+        height: calc(100vh - 110px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+
+    .mobile-header {
+        padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+    }
+
+    .mobile-nav {
+        padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+    }
+
+    .mobile-nav-tab {
+        padding: 6px 16px;
+    }
+
+    .film-dropdown-menu {
+        max-height: 70vh;
+    }
+}
