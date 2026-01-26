@@ -99,6 +99,9 @@ function gradingReducer(state: GradingParams, action: GradingAction): GradingPar
         grainSize: 50,
         fade: 0,
         halation: 0,
+        halationColor: '#FF5500',
+        halationThreshold: 65,
+        halationRadius: 50,
       };
 
     case 'LOAD_PARAMS':
@@ -373,6 +376,20 @@ function App() {
             <ParamSlider dispatch={dispatch} label="Grain Amount" value={params.grainAmount} min={0} max={100} param="grainAmount" />
             <ParamSlider dispatch={dispatch} label="Grain Size" value={params.grainSize} min={0} max={100} param="grainSize" />
             <ParamSlider dispatch={dispatch} label="Halation" value={params.halation} min={0} max={100} param="halation" />
+            {params.halation > 0 && (
+              <>
+                <div className="color-picker-row">
+                  <label>Halation Color</label>
+                  <input
+                    type="color"
+                    value={params.halationColor}
+                    onChange={(e) => dispatch({ type: 'SET_PARAM', param: 'halationColor', value: e.target.value })}
+                  />
+                </div>
+                <ParamSlider dispatch={dispatch} label="Threshold" value={params.halationThreshold} min={0} max={100} param="halationThreshold" />
+                <ParamSlider dispatch={dispatch} label="Radius" value={params.halationRadius} min={0} max={100} param="halationRadius" />
+              </>
+            )}
             <ParamSlider dispatch={dispatch} label="Bloom" value={params.bloom} min={0} max={100} param="bloom" />
             <ParamSlider dispatch={dispatch} label="Diffusion" value={params.diffusion} min={0} max={100} param="diffusion" />
             <ParamSlider dispatch={dispatch} label="Fade" value={params.fade} min={0} max={100} param="fade" />

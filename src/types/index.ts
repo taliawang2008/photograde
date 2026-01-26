@@ -108,6 +108,9 @@ export interface GradingParams {
   // === 特效 ===
   fade: number;          // 0 to 100 (褪色效果)
   halation: number;      // 0 to 100 (高光溢出)
+  halationColor: string; // Hex color for halation glow (default: #FF5500)
+  halationThreshold: number; // 0 to 100 (high = only brightest pixels)
+  halationRadius: number;    // 0 to 100 (blur radius)
   bloom: number;         // 0 to 100 (光晕扩散)
   diffusion: number;     // 0 to 100 (柔焦效果)
   vignette: number;      // 0 to 100 (暗角强度)
@@ -190,6 +193,9 @@ export const defaultGradingParams: GradingParams = {
   // 特效
   fade: 0,
   halation: 0,
+  halationColor: '#FF5500',
+  halationThreshold: 65,
+  halationRadius: 50,
   bloom: 0,
   diffusion: 0,
   vignette: 0,

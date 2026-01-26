@@ -112,8 +112,8 @@ export class WebGLEngine {
       // 颗粒效果
       'u_grainAmount', 'u_grainSize', 'u_time',
       // 特效
-      'u_fade', 'u_halation', 'u_bloom', 'u_diffusion',
-      'u_vignette', 'u_vignetteRadius',
+      'u_fade', 'u_halation', 'u_halationColor', 'u_halationThreshold', 'u_halationRadius',
+      'u_bloom', 'u_diffusion', 'u_vignette', 'u_vignetteRadius',
       // LUT 控制
       'u_lutStrength', 'u_useCurveLUT', 'u_useFilmLUT',
     ];
@@ -300,6 +300,17 @@ export class WebGLEngine {
     // === 特效 ===
     this.gl.uniform1f(this.uniforms['u_fade']!, (params.fade || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_halation']!, (params.halation || 0) / 100.0);
+
+    // Halation color - convert hex to RGB
+    const halationColor = params.halationColor || '#FF5500';
+    const r = parseInt(halationColor.slice(1, 3), 16) / 255;
+    const g = parseInt(halationColor.slice(3, 5), 16) / 255;
+    const b = parseInt(halationColor.slice(5, 7), 16) / 255;
+    this.gl.uniform3f(this.uniforms['u_halationColor']!, r, g, b);
+
+    this.gl.uniform1f(this.uniforms['u_halationThreshold']!, (params.halationThreshold ?? 65) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_halationRadius']!, (params.halationRadius ?? 50) / 100.0);
+
     this.gl.uniform1f(this.uniforms['u_bloom']!, (params.bloom || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_diffusion']!, (params.diffusion || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_vignette']!, (params.vignette || 0) / 100.0);

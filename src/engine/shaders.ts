@@ -61,6 +61,9 @@ export const fragmentShaderSource = `
   // === 特效 ===
   uniform float u_fade;              // 0.0 to 1.0
   uniform float u_halation;          // 0.0 to 1.0
+  uniform vec3 u_halationColor;      // RGB color for halation glow
+  uniform float u_halationThreshold; // 0.0 to 1.0 (higher = only brightest)
+  uniform float u_halationRadius;    // 0.0 to 1.0 (blur spread)
   uniform float u_bloom;             // 0.0 to 1.0 (光晕扩散)
   uniform float u_diffusion;         // 0.0 to 1.0 (柔焦效果)
   uniform float u_vignette;          // 0.0 to 1.0 (暗角强度)
@@ -623,28 +626,35 @@ export const fragmentShaderSource = `
   }
 
   // 12. Professional Halation (高质量光晕 - 多采样模拟散射)
-  vec3 applyProfessionalHalation(vec3 color, float halation, vec2 uv) {
+  // Now uses user-configurable color, threshold, and radius
+  vec3 applyProfessionalHalation(vec3 color, float halation, vec3 halationTint, float threshold, float radius, vec2 uv) {
     if (halation <= 0.0) return color;
 
     float lum = getLuminance(color);
     
-    // 高光检测 - 使用更精确的阈值
-    float halationMask = smoothstep(0.55, 0.85, lum);
+    // 高光检测 - 使用用户可调阈值
+    // threshold: 0.0 = low threshold (more glow), 1.0 = high threshold (only brightest)
+    float thresholdLow = mix(0.3, 0.8, threshold);
+    float thresholdHigh = thresholdLow + 0.2;
+    float halationMask = smoothstep(thresholdLow, thresholdHigh, lum);
     
     // 多采样模拟光散射 (5x5 pattern scaled by halation amount)
     // 这模拟了真实胶片中光线穿过乳剂层时的散射
-    float scatter = halation * 0.008;
+    float scatter = halation * 0.008 * (1.0 + radius);
     vec3 scattered = vec3(0.0);
     float weight = 0.0;
     
     // 采样周围像素模拟散射 (简化版卷积)
+    // radius affects the spread of the scatter pattern
+    float spreadFactor = 1.0 + radius * 2.0;
     for (float dx = -2.0; dx <= 2.0; dx += 1.0) {
       for (float dy = -2.0; dy <= 2.0; dy += 1.0) {
         float dist = length(vec2(dx, dy));
         if (dist > 2.5) continue;
         
-        // 高斯权重
-        float w = exp(-dist * dist * 0.5);
+        // 高斯权重 - modulated by radius
+        float sigma = 0.5 + radius * 0.5;
+        float w = exp(-dist * dist / (2.0 * sigma * sigma));
         weight += w;
         
         // 注意: 在单pass中我们只能访问当前像素
@@ -654,25 +664,23 @@ export const fragmentShaderSource = `
     }
     scattered /= weight;
     
-    // Halation 特有的颜色偏移 (红色/橙色主导)
-    // 这模拟了胶片基底反射光的颜色特性
-    vec3 halationColor;
-    halationColor.r = color.r * 1.6;  // 红色大幅增强
-    halationColor.g = color.g * 0.8;  // 绿色适度
-    halationColor.b = color.b * 0.4;  // 蓝色抑制
+    // Halation 特有的颜色偏移 - 现在使用用户指定的颜色
+    // halationTint is the user's chosen color (e.g., orange for CineStill)
+    vec3 tintedColor = color * halationTint;
     
     // 径向衰减 (边缘更明显)
     vec2 center = uv - 0.5;
     float radialFactor = 1.0 + length(center) * 0.5;
     
-    // 混合散射光晕
-    vec3 halationGlow = halationColor * halationMask * halation * 0.25 * radialFactor;
+    // 混合散射光晕 with user color
+    vec3 halationGlow = tintedColor * halationMask * halation * 0.3 * radialFactor;
     
     // 添加柔和的光晕扩散
     color += halationGlow;
     
-    // 次级橙色光晕层
-    color += vec3(0.08, 0.03, 0.01) * halationMask * halation;
+    // 次级光晕层 - 使用用户颜色的淡化版本
+    vec3 secondaryGlow = halationTint * 0.1 * halationMask * halation;
+    color += secondaryGlow;
 
     return clamp(color, 0.0, 1.0);
   }
@@ -915,8 +923,8 @@ export const fragmentShaderSource = `
     // 15. Diffusion 柔焦
     color = applyDiffusion(color, u_diffusion, v_texCoord);
 
-    // 16. Halation 红色溢出 (专业版)
-    color = applyProfessionalHalation(color, u_halation, v_texCoord);
+    // 16. Halation 红色溢出 (专业版 - 用户可调颜色/阈值/半径)
+    color = applyProfessionalHalation(color, u_halation, u_halationColor, u_halationThreshold, u_halationRadius, v_texCoord);
 
     // 17. Vignette 暗角
     color = applyVignette(color, u_vignette, u_vignetteRadius, v_texCoord);
