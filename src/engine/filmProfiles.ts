@@ -19,12 +19,7 @@ const MAT_FUJI: Mat3 = [
   0.0, 1.02, -0.02,
   0.0, 0.05, 1.05
 ];
-const MAT_VIVID: Mat3 = [
-  1.1, -0.1, 0.0,
-  -0.05, 1.1, -0.05,
-  0.0, -0.1, 1.1
-];
-// B&W Filter (Yellow: Pass R+G, block B slightly)
+// B&W Filter (Yellow: Pass R+G, block B slightly) - Reserved for future specialized B&W presets
 const MAT_BW_YELLOW: Mat3 = [
   0.9, 0.05, 0.05,
   0.05, 0.9, 0.05,

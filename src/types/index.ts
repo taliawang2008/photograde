@@ -284,4 +284,5 @@ export type GradingAction =
   | { type: 'RESET_CURVES' }
   | { type: 'RESET_COLOR_WHEELS' }
   | { type: 'RESET_FILM' }
-  | { type: 'LOAD_PARAMS'; params: GradingParams };
+  | { type: 'LOAD_PARAMS'; params: GradingParams }
+  | { type: 'MERGE_PARAMS'; params: Partial<GradingParams> };

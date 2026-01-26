@@ -8,6 +8,8 @@ import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
 import { filmProfiles } from './engine/filmProfiles';
 import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
+import { CollapsibleSection } from './components/CollapsibleSection';
+import { filmCharacterPresets } from './engine/filmPresets';
 import { useDebouncedLocalStorage, getStoredValue } from './hooks/useLocalStorage';
 import type {
   GradingParams,
@@ -111,6 +113,9 @@ function gradingReducer(state: GradingParams, action: GradingAction): GradingPar
 
     case 'LOAD_PARAMS':
       return { ...action.params };
+
+    case 'MERGE_PARAMS':
+      return { ...state, ...action.params };
 
     default:
       return state;
@@ -262,6 +267,13 @@ function App() {
       if (profile.contrastOverride !== undefined) {
         dispatch({ type: 'SET_PARAM', param: 'contrast', value: profile.contrastOverride });
       }
+    }
+  };
+
+  const handlePresetChange = (presetId: string) => {
+    const preset = filmCharacterPresets.find(p => p.id === presetId);
+    if (preset) {
+      dispatch({ type: 'MERGE_PARAMS', params: preset.params });
     }
   };
 
@@ -452,48 +464,71 @@ function App() {
 
             <ParamSlider dispatch={dispatch} label="Film Strength" value={params.filmStrength} min={0} max={100} param="filmStrength" />
 
-            {/* 高级胶片响应 */}
-            <div className="subsection-title">🎬 Film Response</div>
-            <ParamSlider dispatch={dispatch} label="Toe (Shadows)" value={params.filmToe} min={0} max={100} param="filmToe" />
-            <ParamSlider dispatch={dispatch} label="Shoulder (Highlights)" value={params.filmShoulder} min={0} max={100} param="filmShoulder" />
-
-            {/* 特效 */}
-            <div className="subsection-title">✨ Effects</div>
-            <ParamSlider dispatch={dispatch} label="Grain Amount" value={params.grainAmount} min={0} max={100} param="grainAmount" />
-
-            {params.grainAmount > 0 && (
-              <div style={{ paddingLeft: '10px', borderLeft: '2px solid #333', marginBottom: '10px' }}>
-                <ParamSlider dispatch={dispatch} label="Size" value={params.grainSize} min={0} max={100} param="grainSize" />
-                <ParamSlider dispatch={dispatch} label="Chromacity (Color)" value={params.grainChromacity ?? 60} min={0} max={100} param="grainChromacity" />
-                <ParamSlider dispatch={dispatch} label="Highlights" value={params.grainHighlights ?? 20} min={0} max={100} param="grainHighlights" />
-                <ParamSlider dispatch={dispatch} label="Shadows" value={params.grainShadows ?? 80} min={0} max={100} param="grainShadows" />
+            {/* Film Character Presets Section */}
+            <div className="preset-section" style={{ marginTop: '12px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Film Structure Presets
               </div>
-            )}
+              <select
+                className="log-select"
+                onChange={(e) => handlePresetChange(e.target.value)}
+                defaultValue=""
+              >
+                <option value="" disabled>Select Preset structure...</option>
+                {filmCharacterPresets.map(preset => (
+                  <option key={preset.id} value={preset.id} title={preset.description}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <ParamSlider dispatch={dispatch} label="Acutance (Sharpness)" value={params.acutance} min={0} max={100} param="acutance" />
-            <ParamSlider dispatch={dispatch} label="Halation" value={params.halation} min={0} max={100} param="halation" />
-            {params.halation > 0 && (
-              <>
-                <div className="color-picker-row">
-                  <label>Halation Color</label>
-                  <input
-                    type="color"
-                    value={params.halationColor}
-                    onChange={(e) => dispatch({ type: 'SET_PARAM', param: 'halationColor', value: e.target.value })}
-                  />
-                </div>
-                <ParamSlider dispatch={dispatch} label="Threshold" value={params.halationThreshold} min={0} max={100} param="halationThreshold" />
-                <ParamSlider dispatch={dispatch} label="Radius" value={params.halationRadius} min={0} max={100} param="halationRadius" />
-              </>
-            )}
-            <ParamSlider dispatch={dispatch} label="Bloom" value={params.bloom} min={0} max={100} param="bloom" />
-            <ParamSlider dispatch={dispatch} label="Diffusion" value={params.diffusion} min={0} max={100} param="diffusion" />
-            <ParamSlider dispatch={dispatch} label="Fade" value={params.fade} min={0} max={100} param="fade" />
+            <div style={{ marginTop: '16px' }}>
+              <CollapsibleSection title="🎬 Film Response">
+                <ParamSlider dispatch={dispatch} label="Toe (Shadows)" value={params.filmToe} min={0} max={100} param="filmToe" />
+                <ParamSlider dispatch={dispatch} label="Shoulder (Highlights)" value={params.filmShoulder} min={0} max={100} param="filmShoulder" />
+                <ParamSlider dispatch={dispatch} label="Fade" value={params.fade} min={0} max={100} param="fade" />
+              </CollapsibleSection>
 
-            {/* 暗角 */}
-            <div className="subsection-title">🔲 Vignette</div>
-            <ParamSlider dispatch={dispatch} label="Vignette" value={params.vignette} min={0} max={100} param="vignette" />
-            <ParamSlider dispatch={dispatch} label="Vignette Radius" value={params.vignetteRadius} min={0} max={100} param="vignetteRadius" />
+              <CollapsibleSection title="🎞️ Texture & Grain">
+                <ParamSlider dispatch={dispatch} label="Grain Amount" value={params.grainAmount} min={0} max={100} param="grainAmount" />
+                {params.grainAmount > 0 && (
+                  <div style={{ paddingLeft: '10px', borderLeft: '2px solid #333', marginTop: '4px', marginBottom: '10px' }}>
+                    <ParamSlider dispatch={dispatch} label="Size" value={params.grainSize} min={0} max={100} param="grainSize" />
+                    <ParamSlider dispatch={dispatch} label="Chromacity (Color)" value={params.grainChromacity ?? 60} min={0} max={100} param="grainChromacity" />
+                    <ParamSlider dispatch={dispatch} label="Highlights" value={params.grainHighlights ?? 20} min={0} max={100} param="grainHighlights" />
+                    <ParamSlider dispatch={dispatch} label="Shadows" value={params.grainShadows ?? 80} min={0} max={100} param="grainShadows" />
+                  </div>
+                )}
+              </CollapsibleSection>
+
+              <CollapsibleSection title="✨ Optics & Effects">
+                <ParamSlider dispatch={dispatch} label="Acutance (Sharpness)" value={params.acutance} min={0} max={100} param="acutance" />
+                <ParamSlider dispatch={dispatch} label="Halation" value={params.halation} min={0} max={100} param="halation" />
+                {params.halation > 0 && (
+                  <div style={{ paddingLeft: '10px', borderLeft: '2px solid #333', marginTop: '4px', marginBottom: '10px' }}>
+                    <div className="color-picker-row">
+                      <label>Halation Color</label>
+                      <input
+                        type="color"
+                        value={params.halationColor}
+                        onChange={(e) => dispatch({ type: 'SET_PARAM', param: 'halationColor', value: e.target.value })}
+                      />
+                    </div>
+                    <ParamSlider dispatch={dispatch} label="Threshold" value={params.halationThreshold} min={0} max={100} param="halationThreshold" />
+                    <ParamSlider dispatch={dispatch} label="Radius" value={params.halationRadius} min={0} max={100} param="halationRadius" />
+                  </div>
+                )}
+                <ParamSlider dispatch={dispatch} label="Bloom" value={params.bloom} min={0} max={100} param="bloom" />
+                <ParamSlider dispatch={dispatch} label="Diffusion" value={params.diffusion} min={0} max={100} param="diffusion" />
+              </CollapsibleSection>
+
+              <CollapsibleSection title="🔲 Vignette">
+                <ParamSlider dispatch={dispatch} label="Vignette" value={params.vignette} min={0} max={100} param="vignette" />
+                <ParamSlider dispatch={dispatch} label="Vignette Radius" value={params.vignetteRadius} min={0} max={100} param="vignetteRadius" />
+              </CollapsibleSection>
+            </div>
+
           </div>
 
           {/* 曝光控制 */}
