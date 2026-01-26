@@ -1,0 +1,565 @@
+import { vertexShaderSource, fragmentShaderSource } from './shaders';
+import type { GradingParams, CurvesData, CurvePoint, LUT3D, FilmType } from '../types';
+
+// 胶片类型到整数的映射
+const filmTypeToInt: Record<FilmType, number> = {
+  'none': 0,
+  // Kodak Color Negative (1-7)
+  'kodak-gold': 1,
+  'portra-160': 2,
+  'portra-400': 3,
+  'portra-800': 4,
+  'ektar': 5,
+  'ultramax': 6,
+  'colorplus': 7,
+  // Kodak Slide (8-9)
+  'kodachrome': 8,
+  'ektachrome': 9,
+  // Fuji Color Negative (10-12)
+  'superia': 10,
+  'fuji-400h': 11,
+  'fuji-c200': 12,
+  // Fuji Slide (13-15)
+  'provia': 13,
+  'velvia': 14,
+  'astia': 15,
+  // Cinema (16-17)
+  'cinestill-800t': 16,
+  'cinestill-50d': 17,
+  // Black & White (18-23)
+  'hp5': 18,
+  'trix': 19,
+  'delta': 20,
+  'tmax': 21,
+  'acros': 22,
+  'pan-f': 23,
+};
+
+export class WebGLEngine {
+  private canvas: HTMLCanvasElement;
+  private gl: WebGLRenderingContext;
+  private program: WebGLProgram | null = null;
+
+  // 纹理
+  private imageTexture: WebGLTexture | null = null;
+  private curveLUTTexture: WebGLTexture | null = null;
+  private filmLUTTexture: WebGLTexture | null = null;
+
+  // 属性位置
+  private positionLocation: number = 0;
+  private texCoordLocation: number = 0;
+
+  // Uniform 位置缓存
+  private uniforms: { [key: string]: WebGLUniformLocation | null } = {};
+
+  // 曲线 LUT 数据 (256x4, RGBA)
+  private curveLUTData: Uint8Array = new Uint8Array(256 * 4 * 4);
+
+  // 是否使用曲线
+  private useCurveLUT: boolean = false;
+
+  // 是否使用外部 LUT
+  private useFilmLUT: boolean = false;
+  private filmLUTSize: number = 0;
+
+  constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    const gl = canvas.getContext('webgl', {
+      preserveDrawingBuffer: true,  // 用于导出
+      premultipliedAlpha: false,
+    });
+    if (!gl) {
+      throw new Error("WebGL not supported");
+    }
+    this.gl = gl;
+    this.init();
+    this.initCurveLUT();
+  }
+
+  private init() {
+    const vertexShader = this.createShader(this.gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+    if (!vertexShader || !fragmentShader) return;
+
+    this.program = this.createProgram(vertexShader, fragmentShader);
+    if (!this.program) return;
+
+    this.gl.useProgram(this.program);
+
+    // 获取属性位置
+    this.positionLocation = this.gl.getAttribLocation(this.program, "a_position");
+    this.texCoordLocation = this.gl.getAttribLocation(this.program, "a_texCoord");
+
+    // 获取所有 uniform 位置
+    const uniformNames = [
+      // 纹理
+      'u_image', 'u_curveLUT', 'u_filmLUT',
+      // 基础曝光
+      'u_exposure', 'u_contrast',
+      // 分区域亮度
+      'u_highlights', 'u_shadows', 'u_whites', 'u_blacks',
+      // 色彩控制
+      'u_temperature', 'u_tint', 'u_saturation', 'u_vibrance',
+      // 光谱控制
+      'u_spectralVolume', 'u_spectralLuminance', 'u_spectralHue',
+      // 色轮
+      'u_shadowLift', 'u_midtoneGamma', 'u_highlightGain',
+      // 胶片效果
+      'u_filmStrength', 'u_filmType', 'u_filmLUTSize',
+      // 高级胶片响应
+      'u_filmToe', 'u_filmShoulder', 'u_crossoverShift',
+      // 颗粒效果
+      'u_grainAmount', 'u_grainSize', 'u_time',
+      // 特效
+      'u_fade', 'u_halation', 'u_bloom', 'u_diffusion',
+      'u_vignette', 'u_vignetteRadius',
+      // LUT 控制
+      'u_lutStrength', 'u_useCurveLUT', 'u_useFilmLUT',
+    ];
+
+    uniformNames.forEach(name => {
+      this.uniforms[name] = this.gl.getUniformLocation(this.program!, name);
+    });
+
+    // 设置顶点缓冲区 (全屏四边形)
+    const positionBuffer = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+      -1.0, -1.0,
+      1.0, -1.0,
+      -1.0, 1.0,
+      1.0, 1.0,
+    ]), this.gl.STATIC_DRAW);
+
+    // 设置纹理坐标缓冲区
+    const texCoordBuffer = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texCoordBuffer);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+      0.0, 1.0,
+      1.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+    ]), this.gl.STATIC_DRAW);
+
+    // 启用顶点属性
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
+    this.gl.enableVertexAttribArray(this.positionLocation);
+    this.gl.vertexAttribPointer(this.positionLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texCoordBuffer);
+    this.gl.enableVertexAttribArray(this.texCoordLocation);
+    this.gl.vertexAttribPointer(this.texCoordLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+    // 设置纹理单元
+    this.gl.uniform1i(this.uniforms['u_image']!, 0);
+    this.gl.uniform1i(this.uniforms['u_curveLUT']!, 1);
+    this.gl.uniform1i(this.uniforms['u_filmLUT']!, 2);
+  }
+
+  // 初始化曲线 LUT (默认对角线)
+  private initCurveLUT() {
+    // 创建 256x4 的 LUT 纹理
+    // Row 0: RGB 主曲线
+    // Row 1: Red 通道
+    // Row 2: Green 通道
+    // Row 3: Blue 通道
+    for (let row = 0; row < 4; row++) {
+      for (let i = 0; i < 256; i++) {
+        const offset = (row * 256 + i) * 4;
+        this.curveLUTData[offset] = i;     // R
+        this.curveLUTData[offset + 1] = i; // G
+        this.curveLUTData[offset + 2] = i; // B
+        this.curveLUTData[offset + 3] = 255; // A
+      }
+    }
+
+    // 创建纹理
+    this.curveLUTTexture = this.gl.createTexture();
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.curveLUTTexture);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D, 0, this.gl.RGBA,
+      256, 4, 0,
+      this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.curveLUTData
+    );
+  }
+
+  // 加载图片
+  public loadImage(image: HTMLImageElement) {
+    // 保持原始分辨率以便高质量导出
+    this.canvas.width = image.width;
+    this.canvas.height = image.height;
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+    // 通过 CSS 控制显示大小，适应容器
+    const container = this.canvas.parentElement;
+    if (container) {
+      const maxWidth = container.clientWidth - 40;
+      const maxHeight = container.clientHeight - 40;
+
+      if (image.width > maxWidth || image.height > maxHeight) {
+        const scaleW = maxWidth / image.width;
+        const scaleH = maxHeight / image.height;
+        const scale = Math.min(scaleW, scaleH);
+        this.canvas.style.width = `${Math.floor(image.width * scale)}px`;
+        this.canvas.style.height = `${Math.floor(image.height * scale)}px`;
+      } else {
+        this.canvas.style.width = `${image.width}px`;
+        this.canvas.style.height = `${image.height}px`;
+      }
+    }
+
+    // 创建/更新图像纹理
+    if (this.imageTexture) this.gl.deleteTexture(this.imageTexture);
+
+    this.imageTexture = this.gl.createTexture();
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.imageTexture);
+
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+
+    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
+    this.render();
+  }
+
+  // 更新所有参数
+  public updateParams(params: GradingParams) {
+    if (!this.program || !this.imageTexture) return;
+
+    this.gl.useProgram(this.program);
+
+    // === 基础曝光控制 ===
+    // exposure: -100~100 映射到 -2~2 stops
+    this.gl.uniform1f(this.uniforms['u_exposure']!, (params.exposure || 0) / 50.0);
+    this.gl.uniform1f(this.uniforms['u_contrast']!, (params.contrast || 0) / 100.0);
+
+    // === 分区域亮度调整 ===
+    this.gl.uniform1f(this.uniforms['u_highlights']!, (params.highlights || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_shadows']!, (params.shadows || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_whites']!, (params.whites || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_blacks']!, (params.blacks || 0) / 100.0);
+
+    // === 色彩控制 ===
+    this.gl.uniform1f(this.uniforms['u_temperature']!, (params.temperature || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_tint']!, (params.tint || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_saturation']!, (params.saturation || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_vibrance']!, (params.vibrance || 0) / 100.0);
+
+    // === 光谱控制 ===
+    this.gl.uniform1f(this.uniforms['u_spectralVolume']!, (params.spectralVolume || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_spectralLuminance']!, (params.spectralLuminance || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_spectralHue']!, (params.spectralHue || 0) / 100.0);
+
+    // === 色轮 ===
+    this.gl.uniform3f(
+      this.uniforms['u_shadowLift']!,
+      (params.shadowLift.r || 0) / 100.0,
+      (params.shadowLift.g || 0) / 100.0,
+      (params.shadowLift.b || 0) / 100.0
+    );
+    this.gl.uniform3f(
+      this.uniforms['u_midtoneGamma']!,
+      (params.midtoneGamma.r || 0) / 100.0,
+      (params.midtoneGamma.g || 0) / 100.0,
+      (params.midtoneGamma.b || 0) / 100.0
+    );
+    this.gl.uniform3f(
+      this.uniforms['u_highlightGain']!,
+      (params.highlightGain.r || 0) / 100.0,
+      (params.highlightGain.g || 0) / 100.0,
+      (params.highlightGain.b || 0) / 100.0
+    );
+
+    // === 胶片效果 ===
+    this.gl.uniform1f(this.uniforms['u_filmStrength']!, (params.filmStrength || 0) / 100.0);
+    this.gl.uniform1i(this.uniforms['u_filmType']!, filmTypeToInt[params.filmType]);
+
+    // === 高级胶片响应 ===
+    this.gl.uniform1f(this.uniforms['u_filmToe']!, (params.filmToe || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_filmShoulder']!, (params.filmShoulder || 0) / 100.0);
+    this.gl.uniform3f(
+      this.uniforms['u_crossoverShift']!,
+      (params.crossoverShift?.r || 0) / 100.0,
+      (params.crossoverShift?.g || 0) / 100.0,
+      (params.crossoverShift?.b || 0) / 100.0
+    );
+
+    // === 颗粒效果 ===
+    this.gl.uniform1f(this.uniforms['u_grainAmount']!, (params.grainAmount || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_grainSize']!, (params.grainSize || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_time']!, performance.now() / 1000.0);
+
+    // === 特效 ===
+    this.gl.uniform1f(this.uniforms['u_fade']!, (params.fade || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_halation']!, (params.halation || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_bloom']!, (params.bloom || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_diffusion']!, (params.diffusion || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_vignette']!, (params.vignette || 0) / 100.0);
+    this.gl.uniform1f(this.uniforms['u_vignetteRadius']!, (params.vignetteRadius || 50) / 100.0);
+
+    // === LUT 控制 ===
+    this.gl.uniform1f(this.uniforms['u_lutStrength']!, (params.lutStrength || 0) / 100.0);
+    this.gl.uniform1i(this.uniforms['u_useCurveLUT']!, this.useCurveLUT ? 1 : 0);
+    this.gl.uniform1i(this.uniforms['u_useFilmLUT']!, this.useFilmLUT ? 1 : 0);
+    this.gl.uniform1f(this.uniforms['u_filmLUTSize']!, this.filmLUTSize);
+
+    this.render();
+  }
+
+  // 更新曲线数据
+  public updateCurves(curves: CurvesData) {
+    // Guard: ensure texture is initialized
+    if (!this.curveLUTTexture) {
+      console.error('curveLUTTexture not initialized');
+      return;
+    }
+
+    // 从控制点生成 256 点 LUT
+    const rgbLUT = this.interpolateCurve(curves.rgb);
+    const redLUT = this.interpolateCurve(curves.red);
+    const greenLUT = this.interpolateCurve(curves.green);
+    const blueLUT = this.interpolateCurve(curves.blue);
+
+    // 检查是否有非默认曲线
+    this.useCurveLUT = !this.isDefaultCurve(curves.rgb) ||
+      !this.isDefaultCurve(curves.red) ||
+      !this.isDefaultCurve(curves.green) ||
+      !this.isDefaultCurve(curves.blue);
+
+    // 更新 LUT 数据
+    for (let i = 0; i < 256; i++) {
+      // Row 0: RGB 主曲线
+      this.curveLUTData[i * 4] = rgbLUT[i];
+      this.curveLUTData[i * 4 + 1] = rgbLUT[i];
+      this.curveLUTData[i * 4 + 2] = rgbLUT[i];
+      this.curveLUTData[i * 4 + 3] = 255;
+
+      // Row 1: Red 通道
+      this.curveLUTData[256 * 4 + i * 4] = redLUT[i];
+      this.curveLUTData[256 * 4 + i * 4 + 1] = i;
+      this.curveLUTData[256 * 4 + i * 4 + 2] = i;
+      this.curveLUTData[256 * 4 + i * 4 + 3] = 255;
+
+      // Row 2: Green 通道
+      this.curveLUTData[512 * 4 + i * 4] = i;
+      this.curveLUTData[512 * 4 + i * 4 + 1] = greenLUT[i];
+      this.curveLUTData[512 * 4 + i * 4 + 2] = i;
+      this.curveLUTData[512 * 4 + i * 4 + 3] = 255;
+
+      // Row 3: Blue 通道
+      this.curveLUTData[768 * 4 + i * 4] = i;
+      this.curveLUTData[768 * 4 + i * 4 + 1] = i;
+      this.curveLUTData[768 * 4 + i * 4 + 2] = blueLUT[i];
+      this.curveLUTData[768 * 4 + i * 4 + 3] = 255;
+    }
+
+    // 更新纹理
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.curveLUTTexture);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D, 0, this.gl.RGBA,
+      256, 4, 0,
+      this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.curveLUTData
+    );
+  }
+
+  // 检查曲线是否为默认对角线
+  private isDefaultCurve(points: CurvePoint[]): boolean {
+    if (points.length !== 2) return false;
+    return points[0].x === 0 && points[0].y === 0 &&
+      points[1].x === 255 && points[1].y === 255;
+  }
+
+  // 曲线插值 (Catmull-Rom spline)
+  private interpolateCurve(points: CurvePoint[]): Uint8Array {
+    const lut = new Uint8Array(256);
+
+    if (points.length < 2) {
+      for (let i = 0; i < 256; i++) lut[i] = i;
+      return lut;
+    }
+
+    // 对控制点按 x 排序
+    const sorted = [...points].sort((a, b) => a.x - b.x);
+
+    // Catmull-Rom 插值
+    for (let i = 0; i < 256; i++) {
+      // 找到 i 所在的区间
+      let idx = 0;
+      while (idx < sorted.length - 1 && sorted[idx + 1].x < i) {
+        idx++;
+      }
+
+      if (idx >= sorted.length - 1) {
+        lut[i] = Math.round(Math.max(0, Math.min(255, sorted[sorted.length - 1].y)));
+        continue;
+      }
+
+      const p0 = sorted[Math.max(0, idx - 1)];
+      const p1 = sorted[idx];
+      const p2 = sorted[Math.min(sorted.length - 1, idx + 1)];
+      const p3 = sorted[Math.min(sorted.length - 1, idx + 2)];
+
+      const t = p2.x === p1.x ? 0 : (i - p1.x) / (p2.x - p1.x);
+
+      // Catmull-Rom 公式
+      const t2 = t * t;
+      const t3 = t2 * t;
+
+      const v = 0.5 * (
+        (2 * p1.y) +
+        (-p0.y + p2.y) * t +
+        (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+        (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3
+      );
+
+      lut[i] = Math.round(Math.max(0, Math.min(255, v)));
+    }
+
+    return lut;
+  }
+
+  // 加载 3D LUT
+  public load3DLUT(lut: LUT3D) {
+    const size = lut.size;
+    this.filmLUTSize = size;
+
+    // 将 3D LUT 打包成 2D 纹理 (size 个切片水平排列)
+    const width = size * size;
+    const height = size;
+    const data = new Uint8Array(width * height * 4);
+
+    for (let b = 0; b < size; b++) {
+      for (let g = 0; g < size; g++) {
+        for (let r = 0; r < size; r++) {
+          const srcIdx = (b * size * size + g * size + r) * 3;
+          const dstX = b * size + r;
+          const dstY = g;
+          const dstIdx = (dstY * width + dstX) * 4;
+
+          data[dstIdx] = Math.round(lut.data[srcIdx] * 255);
+          data[dstIdx + 1] = Math.round(lut.data[srcIdx + 1] * 255);
+          data[dstIdx + 2] = Math.round(lut.data[srcIdx + 2] * 255);
+          data[dstIdx + 3] = 255;
+        }
+      }
+    }
+
+    // 创建/更新纹理
+    if (this.filmLUTTexture) this.gl.deleteTexture(this.filmLUTTexture);
+
+    this.filmLUTTexture = this.gl.createTexture();
+    this.gl.activeTexture(this.gl.TEXTURE2);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.filmLUTTexture);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D, 0, this.gl.RGBA,
+      width, height, 0,
+      this.gl.RGBA, this.gl.UNSIGNED_BYTE, data
+    );
+
+    this.useFilmLUT = true;
+  }
+
+  // 清除 3D LUT
+  public clear3DLUT() {
+    this.useFilmLUT = false;
+    this.filmLUTSize = 0;
+  }
+
+  // 获取像素数据 (用于直方图)
+  public getPixelData(): Uint8Array | null {
+    if (!this.imageTexture) return null;
+
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    const pixels = new Uint8Array(width * height * 4);
+
+    this.gl.readPixels(0, 0, width, height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
+
+    return pixels;
+  }
+
+  // 导出图片
+  public exportImage(format: 'png' | 'jpeg' = 'png', quality: number = 0.92): string {
+    const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+    return this.canvas.toDataURL(mimeType, quality);
+  }
+
+  // 获取 Canvas 元素
+  public getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
+  // 渲染
+  private render() {
+    if (!this.imageTexture || !this.curveLUTTexture) return;
+
+    // 确保纹理绑定正确
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.imageTexture);
+
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.curveLUTTexture);
+
+    if (this.filmLUTTexture) {
+      this.gl.activeTexture(this.gl.TEXTURE2);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.filmLUTTexture);
+    }
+
+    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  // 创建着色器
+  private createShader(type: number, source: string): WebGLShader | null {
+    const shader = this.gl.createShader(type);
+    if (!shader) return null;
+
+    this.gl.shaderSource(shader, source);
+    this.gl.compileShader(shader);
+
+    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+      console.error('Shader compile error:', this.gl.getShaderInfoLog(shader));
+      this.gl.deleteShader(shader);
+      return null;
+    }
+
+    return shader;
+  }
+
+  // 创建着色器程序
+  private createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram | null {
+    const program = this.gl.createProgram();
+    if (!program) return null;
+
+    this.gl.attachShader(program, vertexShader);
+    this.gl.attachShader(program, fragmentShader);
+    this.gl.linkProgram(program);
+
+    if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+      console.error('Program link error:', this.gl.getProgramInfoLog(program));
+      return null;
+    }
+
+    return program;
+  }
+
+  // 销毁资源
+  public destroy() {
+    if (this.imageTexture) this.gl.deleteTexture(this.imageTexture);
+    if (this.curveLUTTexture) this.gl.deleteTexture(this.curveLUTTexture);
+    if (this.filmLUTTexture) this.gl.deleteTexture(this.filmLUTTexture);
+    if (this.program) this.gl.deleteProgram(this.program);
+  }
+}
