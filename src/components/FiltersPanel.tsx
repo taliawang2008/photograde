@@ -39,12 +39,13 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({ params, onParamChange }) =>
             <div className="section-title">🎬 Cinematography Filters</div>
 
             {/* Filter Type Selector */}
-            <div className="log-selector">
-                <label>Filter Type</label>
+            <div className="log-selector" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+                <label style={{ marginBottom: '4px', display: 'block' }}>Filter Type</label>
                 <select
                     value={params.filterType}
                     onChange={(e) => onParamChange('filterType', e.target.value)}
                     className="log-select"
+                    style={{ width: '100%', padding: '8px' }}
                 >
                     {filterOptions.map(option => (
                         <option key={option.value} value={option.value}>
