@@ -6,7 +6,7 @@ import { Histogram, calculateHistogram } from './components/Histogram';
 import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
-import { loadCubeLUTFromFile, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
+import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { useDebouncedLocalStorage, getStoredValue } from './hooks/useLocalStorage';
 import type {
   GradingParams,
@@ -17,7 +17,9 @@ import type {
   LUT3D,
   FilmType,
   LogProfile,
+  ACESOutputTransform,
 } from './types';
+import { acesOutputTransforms } from './engine/acesProfiles';
 import { defaultGradingParams } from './types';
 
 // Reducer 处理状态更新
@@ -229,6 +231,39 @@ function App() {
     }
   }, [params, imageLoaded, previewFilmType]);
 
+  // 优化：仅当曲线引用发生变化时才上传纹理 (避免每一帧都上传)
+  useEffect(() => {
+    if (engineRef.current && params.curves !== lastCurvesRef.current) {
+      engineRef.current.updateCurves(params.curves);
+      lastCurvesRef.current = params.curves;
+    }
+  }, [params.curves]);
+
+  // Handle ACES Output Transform loading
+  useEffect(() => {
+    if (!engineRef.current) return;
+
+    const loadODT = async () => {
+      const transform = acesOutputTransforms[params.acesOutputTransform];
+
+      if (!transform || !transform.outputLUT) {
+        engineRef.current?.clearOutputLUT();
+        return;
+      }
+
+      try {
+        const lut = await loadCubeLUTFromURL(transform.outputLUT);
+        engineRef.current?.loadOutputLUT(lut);
+      } catch (err) {
+        console.error('Failed to load ACES ODT LUT:', err);
+        // Fallback to clear if load fails
+        engineRef.current?.clearOutputLUT();
+      }
+    };
+
+    loadODT();
+  }, [params.acesOutputTransform]);
+
   // 处理图片上传
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -412,6 +447,21 @@ function App() {
               value={params.inputLogProfile}
               onChange={(profile: LogProfile) => dispatch({ type: 'SET_PARAM', param: 'inputLogProfile', value: profile })}
             />
+
+            <div className="log-selector" style={{ marginTop: '8px' }}>
+              <label>ACES Output (ODT)</label>
+              <select
+                value={params.acesOutputTransform}
+                onChange={(e) => dispatch({ type: 'SET_PARAM', param: 'acesOutputTransform', value: e.target.value as ACESOutputTransform })}
+                className="log-select"
+              >
+                {Object.entries(acesOutputTransforms).map(([key, profile]) => (
+                  <option key={key} value={key}>
+                    {profile.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="section">

@@ -2,6 +2,8 @@
 
 import type { LogProfile } from '../engine/logProfiles';
 export type { LogProfile } from '../engine/logProfiles';
+import type { ACESOutputTransform } from '../engine/acesProfiles';
+export type { ACESOutputTransform } from '../engine/acesProfiles';
 
 // 胶片类型
 export type FilmType =
@@ -68,6 +70,7 @@ export interface LUT3D {
 export interface GradingParams {
   // === 输入转换 ===
   inputLogProfile: LogProfile;  // Camera log format (none, slog3, vlog, etc.)
+  acesOutputTransform: ACESOutputTransform; // ACES Output Transform (Rec.709, sRGB, etc.)
 
   // === 基础曝光控制 ===
   exposure: number;      // -100 to 100 (映射到 -2 to +2 stops)
@@ -151,6 +154,7 @@ export type ColorWheelMode = 'shadows' | 'midtones' | 'highlights';
 export const defaultGradingParams: GradingParams = {
   // 输入转换
   inputLogProfile: 'none',
+  acesOutputTransform: 'none',
 
   // 基础
   exposure: 0,

@@ -45,6 +45,8 @@ export class WebGLEngine {
   private imageTexture: WebGLTexture | null = null;
   private curveLUTTexture: WebGLTexture | null = null;
   private filmLUTTexture: WebGLTexture | null = null;
+  private inputLUTTexture: WebGLTexture | null = null;
+  private outputLUTTexture: WebGLTexture | null = null;
 
   // 属性位置
   private positionLocation: number = 0;
@@ -62,6 +64,12 @@ export class WebGLEngine {
   // 是否使用外部 LUT
   private useFilmLUT: boolean = false;
   private filmLUTSize: number = 0;
+
+  // ACES Dual LUT state
+  private useInputLUT: boolean = false;
+  private inputLUTSize: number = 0;
+  private useOutputLUT: boolean = false;
+  private outputLUTSize: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -95,7 +103,7 @@ export class WebGLEngine {
     // 获取所有 uniform 位置
     const uniformNames = [
       // 纹理
-      'u_image', 'u_curveLUT', 'u_filmLUT',
+      'u_image', 'u_curveLUT', 'u_filmLUT', 'u_inputLUT', 'u_outputLUT',
       // 输入Log转换
       'u_inputLogProfile',
       // 基础曝光
@@ -119,6 +127,7 @@ export class WebGLEngine {
       'u_bloom', 'u_diffusion', 'u_vignette', 'u_vignetteRadius',
       // LUT 控制
       'u_lutStrength', 'u_useCurveLUT', 'u_useFilmLUT',
+      'u_useInputLUT', 'u_useOutputLUT', 'u_filmLUTSize', 'u_inputLUTSize', 'u_outputLUTSize',
     ];
 
     uniformNames.forEach(name => {
@@ -158,6 +167,8 @@ export class WebGLEngine {
     this.gl.uniform1i(this.uniforms['u_image']!, 0);
     this.gl.uniform1i(this.uniforms['u_curveLUT']!, 1);
     this.gl.uniform1i(this.uniforms['u_filmLUT']!, 2);
+    this.gl.uniform1i(this.uniforms['u_inputLUT']!, 3);
+    this.gl.uniform1i(this.uniforms['u_outputLUT']!, 4);
   }
 
   // 初始化曲线 LUT (默认对角线)
@@ -328,6 +339,12 @@ export class WebGLEngine {
     this.gl.uniform1i(this.uniforms['u_useFilmLUT']!, this.useFilmLUT ? 1 : 0);
     this.gl.uniform1f(this.uniforms['u_filmLUTSize']!, this.filmLUTSize);
 
+    // ACES Dual LUTs
+    this.gl.uniform1i(this.uniforms['u_useInputLUT']!, this.useInputLUT ? 1 : 0);
+    this.gl.uniform1f(this.uniforms['u_inputLUTSize']!, this.inputLUTSize);
+    this.gl.uniform1i(this.uniforms['u_useOutputLUT']!, this.useOutputLUT ? 1 : 0);
+    this.gl.uniform1f(this.uniforms['u_outputLUTSize']!, this.outputLUTSize);
+
     this.render();
   }
 
@@ -449,7 +466,82 @@ export class WebGLEngine {
     const size = lut.size;
     this.filmLUTSize = size;
 
-    // 将 3D LUT 打包成 2D 纹理 (size 个切片水平排列)
+    // 将 3D LUT 打包成 2D 纹理
+    const packed = this.packLUTData(lut);
+    const data = packed.data;
+    const width = packed.width;
+    const height = packed.height;
+
+    // Create texture helper
+    const texture = this.gl.createTexture();
+    this.uploadLUTTexture(texture, data, width, height, 2); // Unit 2 for FilmLUT
+
+    if (this.filmLUTTexture) this.gl.deleteTexture(this.filmLUTTexture);
+    this.filmLUTTexture = texture;
+    this.useFilmLUT = true;
+  }
+
+  // Helper to upload LUT data to texture
+  private uploadLUTTexture(texture: WebGLTexture | null, data: Uint8Array, width: number, height: number, unitIndex: number) {
+    if (!texture) return;
+    const units = [this.gl.TEXTURE0, this.gl.TEXTURE1, this.gl.TEXTURE2, this.gl.TEXTURE3, this.gl.TEXTURE4];
+
+    this.gl.activeTexture(units[unitIndex]);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D, 0, this.gl.RGBA,
+      width, height, 0,
+      this.gl.RGBA, this.gl.UNSIGNED_BYTE, data
+    );
+  }
+
+  // Load Input LUT (IDT)
+  public loadInputLUT(lut: LUT3D) {
+    const size = lut.size;
+    this.inputLUTSize = size;
+    const data = this.packLUTData(lut);
+
+    const texture = this.gl.createTexture();
+    this.uploadLUTTexture(texture, data.data, data.width, data.height, 3); // Unit 3
+
+    if (this.inputLUTTexture) this.gl.deleteTexture(this.inputLUTTexture);
+    this.inputLUTTexture = texture;
+    this.useInputLUT = true;
+  }
+
+  // Clear Input LUT
+  public clearInputLUT() {
+    this.useInputLUT = false;
+    this.inputLUTSize = 0;
+  }
+
+  // Load Output LUT (ODT)
+  public loadOutputLUT(lut: LUT3D) {
+    const size = lut.size;
+    this.outputLUTSize = size;
+    const data = this.packLUTData(lut);
+
+    const texture = this.gl.createTexture();
+    this.uploadLUTTexture(texture, data.data, data.width, data.height, 4); // Unit 4
+
+    if (this.outputLUTTexture) this.gl.deleteTexture(this.outputLUTTexture);
+    this.outputLUTTexture = texture;
+    this.useOutputLUT = true;
+  }
+
+  // Clear Output LUT
+  public clearOutputLUT() {
+    this.useOutputLUT = false;
+    this.outputLUTSize = 0;
+  }
+
+  // Helper to pack 3D LUT to 2D array
+  private packLUTData(lut: LUT3D): { data: Uint8Array, width: number, height: number } {
+    const size = lut.size;
     const width = size * size;
     const height = size;
     const data = new Uint8Array(width * height * 4);
@@ -469,24 +561,7 @@ export class WebGLEngine {
         }
       }
     }
-
-    // 创建/更新纹理
-    if (this.filmLUTTexture) this.gl.deleteTexture(this.filmLUTTexture);
-
-    this.filmLUTTexture = this.gl.createTexture();
-    this.gl.activeTexture(this.gl.TEXTURE2);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.filmLUTTexture);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-    this.gl.texImage2D(
-      this.gl.TEXTURE_2D, 0, this.gl.RGBA,
-      width, height, 0,
-      this.gl.RGBA, this.gl.UNSIGNED_BYTE, data
-    );
-
-    this.useFilmLUT = true;
+    return { data, width, height };
   }
 
   // 清除 3D LUT
@@ -533,6 +608,16 @@ export class WebGLEngine {
     if (this.filmLUTTexture) {
       this.gl.activeTexture(this.gl.TEXTURE2);
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.filmLUTTexture);
+    }
+
+    if (this.inputLUTTexture) {
+      this.gl.activeTexture(this.gl.TEXTURE3);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputLUTTexture);
+    }
+
+    if (this.outputLUTTexture) {
+      this.gl.activeTexture(this.gl.TEXTURE4);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.outputLUTTexture);
     }
 
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);

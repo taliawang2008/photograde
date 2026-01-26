@@ -21,6 +21,8 @@ export const fragmentShaderSource = `
   uniform sampler2D u_image;
   uniform sampler2D u_curveLUT;      // 曲线 LUT (256x4)
   uniform sampler2D u_filmLUT;       // 胶片 3D LUT (打包为2D)
+  uniform sampler2D u_inputLUT;      // 输入/IDT LUT
+  uniform sampler2D u_outputLUT;     // 输出/ODT LUT
 
   // === 输入Log转换 ===
   uniform int u_inputLogProfile;     // 0=none, 1=S-Log3, 2=V-Log, 3=C-Log3, 4=LogC3, 5=N-Log, 6=F-Log, 7=BRAW
@@ -81,6 +83,10 @@ export const fragmentShaderSource = `
   uniform float u_lutStrength;       // 0.0 to 1.0
   uniform bool u_useCurveLUT;
   uniform bool u_useFilmLUT;
+  uniform bool u_useInputLUT;
+  uniform bool u_useOutputLUT;
+  uniform float u_inputLUTSize;
+  uniform float u_outputLUTSize;
 
   // ==================== 工具函数 ====================
 
@@ -1027,6 +1033,11 @@ export const fragmentShaderSource = `
     // 0. Input Log Transform (相机Log转换 - 最先应用)
     color = applyInputLogTransform(color, u_inputLogProfile);
 
+    // 0.5. Input LUT (如使用LUT方式的IDT)
+    if (u_useInputLUT && u_inputLUTSize > 0.0) {
+      color = apply3DLUT(color, u_inputLUT, u_inputLUTSize);
+    }
+
     // 1. 曝光
     color = adjustExposure(color, u_exposure);
 
@@ -1088,6 +1099,12 @@ export const fragmentShaderSource = `
 
     // 18. 颗粒 (专业版 - 最后应用)
     color = applyProfessionalGrain(color, u_grainAmount, u_grainSize, v_texCoord, u_time);
+
+    // 19. Output LUT (ODT / 最终色彩空间转换)
+    if (u_useOutputLUT && u_outputLUTSize > 0.0) {
+      // 输出转换通常不需要混合强度，直接应用
+      color = apply3DLUT(color, u_outputLUT, u_outputLUTSize);
+    }
 
     // 最终 clamp
     gl_FragColor = vec4(clamp(color, 0.0, 1.0), texColor.a);

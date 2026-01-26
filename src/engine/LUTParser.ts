@@ -32,10 +32,10 @@ export function parseCubeLUT(content: string): LUT3D {
 
     // 跳过其他元数据
     if (trimmed.startsWith('DOMAIN_MIN') ||
-        trimmed.startsWith('DOMAIN_MAX') ||
-        trimmed.startsWith('LUT_1D_SIZE') ||
-        trimmed.startsWith('LUT_1D_INPUT_RANGE') ||
-        trimmed.startsWith('LUT_3D_INPUT_RANGE')) {
+      trimmed.startsWith('DOMAIN_MAX') ||
+      trimmed.startsWith('LUT_1D_SIZE') ||
+      trimmed.startsWith('LUT_1D_INPUT_RANGE') ||
+      trimmed.startsWith('LUT_3D_INPUT_RANGE')) {
       continue;
     }
 
@@ -173,4 +173,18 @@ export function createIdentityLUT(size: number = 33): LUT3D {
     title: 'Identity',
     data,
   };
+}
+
+/**
+ * 从 URL 加载 .cube 文件
+ * @param url 文件 URL
+ * @returns LUT3D Promise
+ */
+export async function loadCubeLUTFromURL(url: string): Promise<LUT3D> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load LUT from ${url}: ${response.statusText}`);
+  }
+  const text = await response.text();
+  return parseCubeLUT(text);
 }
