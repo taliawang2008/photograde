@@ -1,5 +1,8 @@
 // V-Log 色彩分级工具 - 类型定义
 
+import type { LogProfile } from '../engine/logProfiles';
+export type { LogProfile } from '../engine/logProfiles';
+
 // 胶片类型
 export type FilmType =
   | 'none'
@@ -63,6 +66,9 @@ export interface LUT3D {
 
 // 完整的调色参数
 export interface GradingParams {
+  // === 输入转换 ===
+  inputLogProfile: LogProfile;  // Camera log format (none, slog3, vlog, etc.)
+
   // === 基础曝光控制 ===
   exposure: number;      // -100 to 100 (映射到 -2 to +2 stops)
   contrast: number;      // -100 to 100
@@ -143,6 +149,9 @@ export type ColorWheelMode = 'shadows' | 'midtones' | 'highlights';
 
 // 默认参数值
 export const defaultGradingParams: GradingParams = {
+  // 输入转换
+  inputLogProfile: 'none',
+
   // 基础
   exposure: 0,
   contrast: 0,

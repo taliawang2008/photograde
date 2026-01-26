@@ -178,6 +178,47 @@ body {
     border-radius: 3px;
 }
 
+/* Log Selector Styles */
+.log-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.log-selector label {
+    font-size: 12px;
+    color: #999;
+}
+
+.log-select {
+    width: 160px;
+    padding: 8px 12px;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.log-select:hover {
+    border-color: #4a9eff;
+}
+
+.log-select:focus {
+    outline: none;
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.log-select option {
+    background: #2a2a2a;
+    color: #fff;
+    padding: 8px;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;

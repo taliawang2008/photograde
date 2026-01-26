@@ -1,4 +1,5 @@
 import { vertexShaderSource, fragmentShaderSource } from './shaders';
+import { logProfileToInt } from './logProfiles';
 import type { GradingParams, CurvesData, CurvePoint, LUT3D, FilmType } from '../types';
 
 // 胶片类型到整数的映射
@@ -95,6 +96,8 @@ export class WebGLEngine {
     const uniformNames = [
       // 纹理
       'u_image', 'u_curveLUT', 'u_filmLUT',
+      // 输入Log转换
+      'u_inputLogProfile',
       // 基础曝光
       'u_exposure', 'u_contrast',
       // 分区域亮度
@@ -235,6 +238,9 @@ export class WebGLEngine {
     if (!this.program || !this.imageTexture) return;
 
     this.gl.useProgram(this.program);
+
+    // === 输入Log转换 ===
+    this.gl.uniform1i(this.uniforms['u_inputLogProfile']!, logProfileToInt[params.inputLogProfile] || 0);
 
     // === 基础曝光控制 ===
     // exposure: -100~100 映射到 -2~2 stops

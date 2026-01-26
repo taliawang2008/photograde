@@ -22,6 +22,9 @@ export const fragmentShaderSource = `
   uniform sampler2D u_curveLUT;      // 曲线 LUT (256x4)
   uniform sampler2D u_filmLUT;       // 胶片 3D LUT (打包为2D)
 
+  // === 输入Log转换 ===
+  uniform int u_inputLogProfile;     // 0=none, 1=S-Log3, 2=V-Log, 3=C-Log3, 4=LogC3, 5=N-Log, 6=F-Log, 7=BRAW
+
   // === 基础曝光控制 ===
   uniform float u_exposure;          // -2.0 to 2.0 stops
   uniform float u_contrast;          // -1.0 to 1.0
@@ -158,6 +161,157 @@ export const fragmentShaderSource = `
   }
 
   // ==================== 调色函数 ====================
+
+  // 0. Input Log Transform (转换相机Log到线性空间)
+  // Applied FIRST in the pipeline to convert log footage to viewable/linear space
+  vec3 applyInputLogTransform(vec3 color, int logProfile) {
+    if (logProfile == 0) return color; // None - no transform
+    
+    vec3 linear = color;
+    
+    // 1: Sony S-Log3 to Linear
+    // Reference: Sony S-Log3 White Paper
+    if (logProfile == 1) {
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x >= 0.171) {
+          v = pow(10.0, (x - 0.410) / 0.255) * 0.18 - 0.01;
+        } else {
+          v = (x - 0.092) / 5.0 * 0.18 - 0.01;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    // 2: Panasonic V-Log to Linear
+    // Reference: Panasonic V-Log White Paper
+    else if (logProfile == 2) {
+      float cutInv = 0.181;
+      float b = 0.00873;
+      float c = 0.241;
+      float d = 0.598;
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x < cutInv) {
+          v = (x - 0.125) / 5.6;
+        } else {
+          v = pow(10.0, (x - d) / c) - b;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    // 3: Canon C-Log3 to Linear
+    // Reference: Canon C-Log3 Technical Note
+    else if (logProfile == 3) {
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x < 0.097) {
+          v = -(pow(10.0, (0.073 - x) / 0.529) - 1.0) / 14.98;
+        } else if (x > 0.15) {
+          v = (pow(10.0, (x - 0.073) / 0.529) - 1.0) / 14.98;
+        } else {
+          v = (x - 0.073) / 9.0;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    // 4: ARRI LogC3 (EI 800) to Linear
+    // Reference: ARRI LogC3 Specification
+    else if (logProfile == 4) {
+      float cut = 0.010591;
+      float a = 5.555556;
+      float b = 0.052272;
+      float c = 0.247190;
+      float d = 0.385537;
+      float e = 5.367655;
+      float f = 0.092809;
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x > e * cut + f) {
+          v = (pow(10.0, (x - d) / c) - b) / a;
+        } else {
+          v = (x - f) / e;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    // 5: Nikon N-Log to Linear
+    // Reference: Nikon N-Log Technical Specification
+    else if (logProfile == 5) {
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x < 0.328) {
+          v = pow((x / 0.328), 3.0) * 0.018;
+        } else {
+          v = exp((x - 0.636) / 0.181) * 0.18;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    // 6: Fujifilm F-Log to Linear
+    // Reference: Fujifilm F-Log Specification
+    else if (logProfile == 6) {
+      float a = 0.555556;
+      float b = 0.009468;
+      float c = 0.344676;
+      float d = 0.790453;
+      float cutInv = 0.100537775;
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x >= cutInv) {
+          v = pow(10.0, (x - d) / c) / a - b / a;
+        } else {
+          v = (x - 0.092864) / 8.799461;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    // 7: Blackmagic Film Gen 5 to Linear
+    // Reference: Blackmagic Design Camera SDK
+    else if (logProfile == 7) {
+      float a = 0.09246575;
+      float b = 0.5300133;
+      float c = 0.149;
+      float linCut = 0.005;
+      for (int i = 0; i < 3; i++) {
+        float x = i == 0 ? color.r : (i == 1 ? color.g : color.b);
+        float v;
+        if (x > c) {
+          v = pow(2.0, (x - b) / a);
+        } else {
+          v = x / 10.44426855;
+        }
+        if (i == 0) linear.r = v;
+        else if (i == 1) linear.g = v;
+        else linear.b = v;
+      }
+    }
+    
+    return clamp(linear, 0.0, 1.0);
+  }
 
   // 1. 曝光调整
   vec3 adjustExposure(vec3 color, float exposure) {
@@ -869,6 +1023,9 @@ export const fragmentShaderSource = `
     vec3 color = texColor.rgb;
 
     // === 处理流程 (按需求文档顺序) ===
+
+    // 0. Input Log Transform (相机Log转换 - 最先应用)
+    color = applyInputLogTransform(color, u_inputLogProfile);
 
     // 1. 曝光
     color = adjustExposure(color, u_exposure);

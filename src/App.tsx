@@ -5,6 +5,7 @@ import { ColorWheel } from './components/ColorWheel';
 import { Histogram, calculateHistogram } from './components/Histogram';
 import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
+import LogSelector from './components/LogSelector';
 import { loadCubeLUTFromFile, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { useDebouncedLocalStorage, getStoredValue } from './hooks/useLocalStorage';
 import type {
@@ -15,6 +16,7 @@ import type {
   HistogramData,
   LUT3D,
   FilmType,
+  LogProfile,
 } from './types';
 import { defaultGradingParams } from './types';
 
@@ -401,6 +403,17 @@ function App() {
           </div>
 
           {/* 曝光控制 */}
+          {/* Input Log Profile */}
+          <div className="section">
+            <div className="section-header">
+              <div className="section-title" style={{ marginBottom: 0 }}>🎥 Input</div>
+            </div>
+            <LogSelector
+              value={params.inputLogProfile}
+              onChange={(profile: LogProfile) => dispatch({ type: 'SET_PARAM', param: 'inputLogProfile', value: profile })}
+            />
+          </div>
+
           <div className="section">
             <div className="section-header">
               <div className="section-title" style={{ marginBottom: 0 }}>⚙️ Light</div>
