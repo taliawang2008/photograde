@@ -118,7 +118,7 @@ export const fragmentShaderSource = `
 
   // Gold Noise - static noise with no pattern artifacts
   float random(vec2 xy) {
-    return fract(tan(distance(xy * PHI, xy) * u_time) * xy.x);
+    return fract(tan(distance(xy * PHI, xy) * 1.0) * xy.x);
   }
   
   // High-performance pseudorandom for dithering (no time dependency by default)
@@ -960,7 +960,7 @@ export const fragmentShaderSource = `
       return value;
   }
 
-  vec3 applyOrganicGrain(vec3 color, float amount, float size, float roughness, vec2 uv, float time) {
+  vec3 applyOrganicGrain(vec3 color, float amount, float size, float roughness, float chromacity, float highlights, float shadows, vec2 uv, float time) {
     if (amount <= 0.0) return color;
 
     // Base grain scale (smaller = finer)
@@ -989,8 +989,8 @@ export const fragmentShaderSource = `
     // Combined mask
     float densityMask = responseCurve; 
     // Mix in user overrides
-    densityMask = mix(densityMask, 1.0, u_grainShadows * (1.0 - shadowMask)); // Boost shadow grain if requested
-    densityMask = mix(densityMask, 1.0, u_grainHighlights * (1.0 - highlightMask));
+    densityMask = mix(densityMask, 1.0, shadows * (1.0 - shadowMask)); // Boost shadow grain if requested
+    densityMask = mix(densityMask, 1.0, highlights * (1.0 - highlightMask));
     
     densityMask = clamp(densityMask, 0.2, 1.0); // Never fully zero, film always has some base fog
 
@@ -1021,7 +1021,7 @@ export const fragmentShaderSource = `
     
     // Chroma Control: Mono vs Color grain
     float lumaGrain = dot(grainVec, vec3(0.333));
-    vec3 finalGrain = mix(vec3(lumaGrain), grainVec, u_grainChromacity);
+    vec3 finalGrain = mix(vec3(lumaGrain), grainVec, chromacity);
     
     // Apply masked grain
     color += finalGrain * densityMask;
@@ -1498,7 +1498,7 @@ export const fragmentShaderSource = `
     color = applyAcutance(color, v_texCoord, u_acutance);
 
     // 18. 颗粒 (Organic Dye Cloud Simulation - 最后应用)
-    color = applyOrganicGrain(color, u_grainAmount, u_grainSize, u_grainRoughness, v_texCoord, u_time);
+    color = applyOrganicGrain(color, u_grainAmount, u_grainSize, u_grainRoughness, u_grainChromacity, u_grainHighlights, u_grainShadows, v_texCoord, u_time);
 
     // 19. Output LUT (ODT / 最终色彩空间转换)
     if (u_useOutputLUT && u_outputLUTSize > 0.0) {
