@@ -140,6 +140,16 @@ export interface GradingParams {
 
   // === LUT ===
   lutStrength: number;   // 0 to 100
+
+  // === Cinematography Filters ===
+  filterType: 'none' | 'black-pro-mist' | 'black-mist' | 'hdf' |
+  'hollywood-black-magic' | 'glimmerglass' | 'white-diffusion' |
+  'orton' | 'streak';
+  filterStrength: number;        // 0 to 100
+  filterGlowRadius: number;      // 0 to 100
+  filterGlowThreshold: number;   // 0 to 100
+  filterSharpness: number;       // 0 to 100 (reduction amount)
+  filterStreakAngle: number;     // 0 to 360 (for streak filter)
 }
 
 // 直方图数据
@@ -235,6 +245,14 @@ export const defaultGradingParams: GradingParams = {
 
   // LUT
   lutStrength: 100,
+
+  // Cinematography Filters
+  filterType: 'none',
+  filterStrength: 50,
+  filterGlowRadius: 50,
+  filterGlowThreshold: 65,
+  filterSharpness: 30,
+  filterStreakAngle: 0,
 };
 
 // 胶片配置

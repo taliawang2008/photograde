@@ -6,6 +6,7 @@ import { Histogram, calculateHistogram } from './components/Histogram';
 import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
+import FiltersPanel from './components/FiltersPanel';
 import { filmProfiles, filmTypeList, getFilmDisplayName } from './engine/filmProfiles';
 import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { CollapsibleSection } from './components/CollapsibleSection';
@@ -864,6 +865,12 @@ function App() {
               onReset={() => dispatch({ type: 'RESET_COLOR_WHEELS' })}
             />
           </div>
+
+          {/* Cinematography Filters */}
+          <FiltersPanel
+            params={params}
+            onParamChange={(param, value) => dispatch({ type: 'SET_PARAM', param, value })}
+          />
 
           {/* 直方图 */}
           <div className="section">

@@ -35,10 +35,11 @@ const filmTypeToInt: Record<FilmType, number> = {
   'mono-fine-100': 21,
   'mono-fine-ac': 22,
   'mono-fine-pf': 23,
-  // Recipes (24-26)
+  // Recipes (24-27)
   'cinema-2383': 24,
   'lomochrome-purple': 25,
   'reala-ace': 26,
+  'autumn-breeze': 27,
 };
 
 export class WebGLEngine {
@@ -136,6 +137,9 @@ export class WebGLEngine {
       // LUT 控制
       'u_lutStrength', 'u_useCurveLUT', 'u_useFilmLUT',
       'u_useInputLUT', 'u_useOutputLUT', 'u_filmLUTSize', 'u_inputLUTSize', 'u_outputLUTSize',
+      // Cinematography Filters
+      'u_filterType', 'u_filterStrength', 'u_filterGlowRadius',
+      'u_filterGlowThreshold', 'u_filterSharpness', 'u_filterStreakAngle',
     ];
 
     uniformNames.forEach(name => {
@@ -376,6 +380,34 @@ export class WebGLEngine {
     this.gl.uniform1f(this.uniforms['u_inputLUTSize']!, this.inputLUTSize);
     this.gl.uniform1i(this.uniforms['u_useOutputLUT']!, this.useOutputLUT ? 1 : 0);
     this.gl.uniform1f(this.uniforms['u_outputLUTSize']!, this.outputLUTSize);
+
+    // === Cinematography Filters ===
+    const filterTypeMap: Record<string, number> = {
+      'none': 0,
+      'black-pro-mist': 1,
+      'black-mist': 2,
+      'hdf': 3,
+      'hollywood-black-magic': 4,
+      'glimmerglass': 5,
+      'white-diffusion': 6,
+      'orton': 7,
+      'streak': 8,
+    };
+
+    // Use defaults if params are undefined (for backwards compatibility)
+    const filterType = params.filterType ?? 'none';
+    const filterStrength = params.filterStrength ?? 50;
+    const filterGlowRadius = params.filterGlowRadius ?? 50;
+    const filterGlowThreshold = params.filterGlowThreshold ?? 65;
+    const filterSharpness = params.filterSharpness ?? 30;
+    const filterStreakAngle = params.filterStreakAngle ?? 0;
+
+    this.gl.uniform1i(this.uniforms['u_filterType']!, filterTypeMap[filterType] || 0);
+    this.gl.uniform1f(this.uniforms['u_filterStrength']!, filterStrength);
+    this.gl.uniform1f(this.uniforms['u_filterGlowRadius']!, filterGlowRadius);
+    this.gl.uniform1f(this.uniforms['u_filterGlowThreshold']!, filterGlowThreshold);
+    this.gl.uniform1f(this.uniforms['u_filterSharpness']!, filterSharpness);
+    this.gl.uniform1f(this.uniforms['u_filterStreakAngle']!, filterStreakAngle);
 
     this.render();
   }

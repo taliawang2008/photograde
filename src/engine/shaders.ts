@@ -97,6 +97,14 @@ export const fragmentShaderSource = `
   uniform float u_inputLUTSize;
   uniform float u_outputLUTSize;
 
+  // === Cinematography Filters ===
+  uniform int u_filterType;          // 0=none, 1-8=filter types
+  uniform float u_filterStrength;    // 0.0 to 1.0
+  uniform float u_filterGlowRadius;  // 0.0 to 1.0
+  uniform float u_filterGlowThreshold; // 0.0 to 1.0
+  uniform float u_filterSharpness;   // 0.0 to 1.0
+  uniform float u_filterStreakAngle; // 0.0 to 360.0
+
   // ==================== 工具函数 ====================
 
   // 亮度计算 (BT.709)
@@ -1140,6 +1148,248 @@ export const fragmentShaderSource = `
     return clamp(color, 0.0, 1.0);
   }
 
+  // ==================== CINEMATOGRAPHY FILTERS ====================
+
+  // Gaussian blur approximation for glow effects
+  vec3 applyGlow(vec3 color, float threshold, float radius, float strength, vec2 uv) {
+    if (strength <= 0.0) return color;
+    
+    // Logic changed: We don't check if current pixel is bright.
+    // Instead, we check if NEIGHBORS are bright and add their light to us.
+    
+    vec3 glow = vec3(0.0);
+    float glowWeight = 0.0;
+    float blurSize = radius * 0.00005; // Reduced 5x for finer control (0.00025 -> 0.00005)
+    
+    // 5x5 Grid for better quality (wider spread)
+    for (float x = -2.0; x <= 2.0; x += 1.0) {
+      for (float y = -2.0; y <= 2.0; y += 1.0) {
+        vec2 offset = vec2(x, y) * blurSize;
+        vec3 sample = texture2D(u_image, uv + offset).rgb;
+        float sampleLum = getLuminance(sample);
+        
+        // Calculate how much this neighbor contributes to glow
+        // Only pixels brighter than threshold emit glow
+        float contribution = smoothstep(threshold, 1.0, sampleLum);
+        
+        if (contribution > 0.0) {
+           // Distance attenuation (center is stronger) - Optional but looks better
+           float dist = length(vec2(x, y));
+           float weight = 1.0 / (1.0 + dist); 
+           
+           glow += sample * contribution * weight;
+           glowWeight += weight;
+        }
+      }
+    }
+    
+    if (glowWeight > 0.0) {
+      glow /= glowWeight;
+      // Additive blending: add the glow to the base color
+      color += glow * strength;
+    }
+    
+    return clamp(color, 0.0, 1.0);
+  }
+
+  // Sharpness reduction (blur)
+  vec3 reduceSharpness(vec3 color, float amount, vec2 uv) {
+    if (amount <= 0.0) return color;
+    
+    vec3 blurred = vec3(0.0);
+    float blurSize = amount * 0.01; // Scale for softening (1.0 → 0.01 = 1% of screen)
+    
+    // 5-tap blur
+    blurred += texture2D(u_image, uv + vec2(-blurSize, 0.0)).rgb * 0.2;
+    blurred += texture2D(u_image, uv + vec2(blurSize, 0.0)).rgb * 0.2;
+    blurred += texture2D(u_image, uv + vec2(0.0, -blurSize)).rgb * 0.2;
+    blurred += texture2D(u_image, uv + vec2(0.0, blurSize)).rgb * 0.2;
+    blurred += color * 0.2;
+    
+    return mix(color, blurred, amount);
+  }
+
+  // 20. Cinematography Filters
+  vec3 applyCinematographyFilter(
+    vec3 color, 
+    int filterType, 
+    float strength,
+    float glowRadius,
+    float glowThreshold,
+    float sharpness,
+    float streakAngle,
+    vec2 uv
+  ) {
+    if (filterType == 0 || strength <= 0.0) return color; // None
+    
+    vec3 filtered = color;
+    float lum = getLuminance(color);
+    
+    // 1: Black Pro-Mist (Tiffen)
+    // Softens highlights, creates vintage glow, reduces contrast
+    if (filterType == 1) {
+      // Glow in highlights
+      filtered = applyGlow(filtered, glowThreshold * 0.01, glowRadius, strength * 0.01, uv);
+      
+      // Reduce sharpness
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.3, uv);
+      
+      // Slight contrast reduction
+      filtered = mix(filtered, vec3(lum), strength * 0.01 * 0.1);
+      
+      // Lift blacks slightly
+      filtered = max(filtered, vec3(strength * 0.01 * 0.05));
+    }
+    
+    // 2: Black Mist
+    // Strong highlight bloom with dreamy quality
+    else if (filterType == 2) {
+      // Stronger glow
+      filtered = applyGlow(filtered, glowThreshold * 0.01 * 0.8, glowRadius * 1.2, strength * 0.01 * 1.5, uv);
+      
+      // More sharpness reduction
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.5, uv);
+      
+      // Contrast reduction
+      filtered = mix(filtered, vec3(lum), strength * 0.01 * 0.15);
+      
+      // Lift blacks
+      filtered = max(filtered, vec3(strength * 0.01 * 0.08));
+    }
+    
+    // 3: Heavy Diffusion Filter (HDF)
+    // Extreme softening and glow for romantic look
+    else if (filterType == 3) {
+      // Very strong glow
+      filtered = applyGlow(filtered, glowThreshold * 0.01 * 0.6, glowRadius * 1.5, strength * 0.01 * 2.0, uv);
+      
+      // Heavy sharpness reduction
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.7, uv);
+      
+      // Significant contrast reduction
+      filtered = mix(filtered, vec3(lum), strength * 0.01 * 0.25);
+      
+      // Lift blacks significantly
+      filtered = max(filtered, vec3(strength * 0.01 * 0.12));
+      
+      // Add slight warm tint
+      filtered.r *= 1.0 + strength * 0.01 * 0.05;
+      filtered.b *= 1.0 - strength * 0.01 * 0.03;
+    }
+    
+    // 4: Hollywood Black Magic
+    // Warm golden glow in highlights, vintage glamour
+    else if (filterType == 4) {
+      // Warm-tinted glow
+      vec3 warmGlow = applyGlow(filtered, glowThreshold * 0.01, glowRadius, strength * 0.01, uv);
+      // Add golden tint to glow
+      warmGlow.r *= 1.15;
+      warmGlow.g *= 1.05;
+      warmGlow.b *= 0.85;
+      filtered = warmGlow;
+      
+      // Minimal sharpness reduction
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.2, uv);
+      
+      // Slight contrast boost (opposite of mist)
+      filtered = mix(filtered, vec3(lum), -strength * 0.01 * 0.05);
+    }
+    
+    // 5: Glimmerglass
+    // Sparkle and subtle glow, maintains detail
+    else if (filterType == 5) {
+      // Small radius, high intensity glow
+      filtered = applyGlow(filtered, glowThreshold * 0.01 * 1.2, glowRadius * 0.5, strength * 0.01 * 0.8, uv);
+      
+      // Very minimal sharpness reduction
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.1, uv);
+      
+      // Add subtle sparkle (enhance highlights)
+      float highlightMask = smoothstep(0.7, 1.0, lum);
+      filtered += highlightMask * strength * 0.01 * 0.1;
+    }
+    
+    // 6: White Diffusion / Soft FX
+    // Overall softening without glow
+    else if (filterType == 6) {
+      // No glow, just diffusion
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.6, uv);
+      
+      // Slight contrast reduction
+      filtered = mix(filtered, vec3(lum), strength * 0.01 * 0.12);
+      
+      // Skin smoothing effect (reduce texture in midtones)
+      float midtoneMask = 1.0 - abs(lum - 0.5) * 2.0;
+      filtered = mix(filtered, vec3(lum), midtoneMask * strength * 0.01 * 0.08);
+    }
+    
+    // 7: Orton Effect
+    // Dreamy glow overlay with enhanced colors
+    else if (filterType == 7) {
+      // Create blurred, saturated version
+      vec3 blurred = reduceSharpness(filtered, 0.5, uv);
+      vec3 hsl = rgb2hsl(blurred);
+      hsl.y *= 1.0 + strength * 0.01 * 0.3; // Boost saturation
+      vec3 saturatedBlur = hsl2rgb(hsl);
+      
+      // Screen blend mode
+      vec3 orton = 1.0 - (1.0 - filtered) * (1.0 - saturatedBlur);
+      filtered = mix(filtered, orton, strength * 0.01 * 0.5);
+    }
+    
+    // 8: Streak Filter (Anamorphic)
+    // Directional light streaks
+    else if (filterType == 8) {
+      float threshold = glowThreshold * 0.01;
+      
+      // Removed check for current pixel luminance
+      // Streak comes from NEIGHBORS, not self
+      
+      // Calculate streak direction
+      float angleRad = radians(streakAngle);
+      vec2 streakDir = vec2(cos(angleRad), sin(angleRad));
+      
+      // Sample along streak direction
+      vec3 streakContribution = vec3(0.0);
+      float streakWeight = 0.0;
+      float streakLength = glowRadius * 0.0002; // Reduced 5x (0.001 -> 0.0002)
+      
+      // Sample more points for better streak quality
+      for (float i = -8.0; i <= 8.0; i += 1.0) {
+        if (i == 0.0) continue; // Skip center pixel (avoid self-bloom)
+        
+        vec2 offset = streakDir * i * streakLength;
+        vec3 sample = texture2D(u_image, uv + offset).rgb;
+        float sampleLum = getLuminance(sample);
+        
+        // Only bright pixels contribute to streak
+        float contribution = smoothstep(threshold, 1.0, sampleLum);
+        
+        if (contribution > 0.0) {
+           // Falloff based on distance
+           float dist = abs(i);
+           float weight = (1.0 / (dist * 0.5 + 1.0)) * contribution;
+           
+           streakContribution += sample * weight;
+           streakWeight += weight;
+        }
+      }
+      
+      if (streakWeight > 0.0) {
+        // Additive blending
+        // Normalize slightly but allow accumulation for intense streaks
+        filtered += streakContribution * strength * 0.01 * 0.4;
+      }
+      
+      // Slight sharpness reduction for anamorphic feel
+      filtered = reduceSharpness(filtered, sharpness * 0.01 * 0.2, uv);
+    }
+      
+
+    
+    return clamp(filtered, 0.0, 1.0);
+  }
+
   // ==================== 主函数 ====================
 
   void main() {
@@ -1235,6 +1485,18 @@ export const fragmentShaderSource = `
       // 输出转换通常不需要混合强度，直接应用
       color = apply3DLUT(color, u_outputLUT, u_outputLUTSize);
     }
+
+    // 20. Cinematography Filters (applied last for authentic look)
+    color = applyCinematographyFilter(
+      color,
+      u_filterType,
+      u_filterStrength,
+      u_filterGlowRadius,
+      u_filterGlowThreshold,
+      u_filterSharpness,
+      u_filterStreakAngle,
+      v_texCoord
+    );
 
     // 最终 clamp
     gl_FragColor = vec4(clamp(color, 0.0, 1.0), texColor.a);
