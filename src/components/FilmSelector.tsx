@@ -36,29 +36,29 @@ const FilmSelector: React.FC<FilmSelectorProps> = ({ value, onChange, onPreview 
     // Organize films by category
     const categories: FilmCategory[] = [
         {
-            name: 'Kodak Color',
+            name: 'K-Series (Warm)',
             icon: '📷',
             films: filmTypeList.filter(f =>
-                ['none', 'kodak-gold', 'portra-160', 'portra-400', 'portra-800', 'ektar', 'ultramax', 'colorplus'].includes(f.value)
+                ['none', 'amber-gold', 'portrait-160', 'portrait-400', 'portrait-800', 'vivid-100', 'max-400', 'budget-color'].includes(f.value)
             ),
         },
         {
-            name: 'Fuji Color',
+            name: 'F-Series (Verdant)',
             icon: '📷',
-            films: filmTypeList.filter(f => ['superia', 'fuji-400h', 'fuji-c200'].includes(f.value)),
+            films: filmTypeList.filter(f => ['verdant-400', 'f-portrait-400', 'f-c200', 'reala-ace'].includes(f.value)),
         },
         {
-            name: 'Slide Films',
+            name: 'Slide (Chrome)',
             icon: '🎞️',
             films: filmTypeList.filter(f => f.category === 'slide'),
         },
         {
-            name: 'Cinema',
+            name: 'Motion Picture',
             icon: '🎬',
             films: filmTypeList.filter(f => f.category === 'cinema'),
         },
         {
-            name: 'Black & White',
+            name: 'Monochrome',
             icon: '⬛',
             films: filmTypeList.filter(f => f.category === 'bw'),
         },

@@ -6,37 +6,37 @@ import type { GradingParams, CurvesData, CurvePoint, LUT3D, FilmType } from '../
 // 胶片类型到整数的映射
 const filmTypeToInt: Record<FilmType, number> = {
   'none': 0,
-  // Kodak Color Negative (1-7)
-  'kodak-gold': 1,
-  'portra-160': 2,
-  'portra-400': 3,
-  'portra-800': 4,
-  'ektar': 5,
-  'ultramax': 6,
-  'colorplus': 7,
-  // Kodak Slide (8-9)
-  'kodachrome': 8,
-  'ektachrome': 9,
-  // Fuji Color Negative (10-12)
-  'superia': 10,
-  'fuji-400h': 11,
-  'fuji-c200': 12,
-  // Fuji Slide (13-15)
-  'provia': 13,
-  'velvia': 14,
-  'astia': 15,
+  // Color Negative (1-7)
+  'amber-gold': 1,
+  'portrait-160': 2,
+  'portrait-400': 3,
+  'portrait-800': 4,
+  'vivid-100': 5,
+  'max-400': 6,
+  'budget-color': 7,
+  // Slide (8-9)
+  'vintage-chrome': 8,
+  'chrome-100': 9,
+  // Color Negative (Alt) (10-12)
+  'verdant-400': 10,
+  'f-portrait-400': 11,
+  'f-c200': 12,
+  // Slide (Alt) (13-15)
+  'natural-100': 13,
+  'vivid-50': 14,
+  'soft-100': 15,
   // Cinema (16-17)
-  'cinestill-800t': 16,
-  'cinestill-50d': 17,
+  'motion-800t': 16,
+  'motion-50d': 17,
   // Black & White (18-23)
-  'hp5': 18,
-  'trix': 19,
-  'delta': 20,
-  'tmax': 21,
-  'acros': 22,
-  'pan-f': 23,
+  'mono-classic-400': 18,
+  'mono-classic-tx': 19,
+  'mono-grain-3200': 20,
+  'mono-fine-100': 21,
+  'mono-fine-ac': 22,
+  'mono-fine-pf': 23,
   // Recipes (24-26)
-  'kodak-2383': 24,
+  'cinema-2383': 24,
   'lomochrome-purple': 25,
   'reala-ace': 26,
 };

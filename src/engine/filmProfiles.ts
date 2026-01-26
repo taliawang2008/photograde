@@ -22,10 +22,10 @@ const MAT_FUJI: Mat3 = [
 ];
 
 export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
-  // ==================== KODAK COLOR NEGATIVE ====================
+  // ==================== COLOR NEGATIVE ====================
 
-  'kodak-gold': {
-    name: 'Kodak Gold 200',
+  'amber-gold': {
+    name: 'K-Amber Gold 200',
     shadowShift: { r: 0.04, g: 0.02, b: -0.01 },
     highlightShift: { r: 0.06, g: 0.03, b: -0.03 },
     contrast: 1.12,
@@ -38,8 +38,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     colorMatrix: MAT_WARM,
   },
 
-  'portra-160': {
-    name: 'Kodak Portra 160',
+  'portrait-160': {
+    name: 'P-Portrait 160',
     shadowShift: { r: 0.01, g: 0.015, b: 0.01 },
     highlightShift: { r: 0.02, g: 0.01, b: -0.01 },
     contrast: 0.92,
@@ -50,8 +50,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'portra-400': {
-    name: 'Kodak Portra 400',
+  'portrait-400': {
+    name: 'P-Portrait 400',
     shadowShift: { r: 0.015, g: 0.02, b: 0.01 },
     highlightShift: { r: 0.025, g: 0.015, b: -0.01 },
     contrast: 0.95,
@@ -63,8 +63,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     colorMatrix: MAT_PORTRAIT,
   },
 
-  'portra-800': {
-    name: 'Kodak Portra 800',
+  'portrait-800': {
+    name: 'P-Portrait 800',
     shadowShift: { r: 0.02, g: 0.025, b: 0.015 },
     highlightShift: { r: 0.03, g: 0.02, b: 0.0 },
     contrast: 0.98,
@@ -75,8 +75,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'ektar': {
-    name: 'Kodak Ektar 100',
+  'vivid-100': {
+    name: 'K-Vivid 100',
     shadowShift: { r: -0.01, g: 0.0, b: 0.02 },
     highlightShift: { r: 0.03, g: 0.01, b: -0.02 },
     contrast: 1.18,
@@ -87,8 +87,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'ultramax': {
-    name: 'Kodak Ultramax 400',
+  'max-400': {
+    name: 'K-Max 400',
     shadowShift: { r: 0.03, g: 0.02, b: -0.02 },
     highlightShift: { r: 0.05, g: 0.02, b: -0.03 },
     contrast: 1.1,
@@ -99,8 +99,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'colorplus': {
-    name: 'Kodak ColorPlus 200',
+  'budget-color': {
+    name: 'K-Color 200',
     shadowShift: { r: 0.03, g: 0.015, b: -0.015 },
     highlightShift: { r: 0.04, g: 0.02, b: -0.02 },
     contrast: 1.08,
@@ -111,10 +111,10 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  // ==================== KODAK SLIDE/REVERSAL ====================
+  // ==================== SLIDE/REVERSAL ====================
 
-  'kodachrome': {
-    name: 'Kodachrome 64',
+  'vintage-chrome': {
+    name: 'K-Vintage 64',
     shadowShift: { r: 0.02, g: 0.0, b: -0.02 },
     highlightShift: { r: 0.04, g: 0.01, b: -0.03 },
     contrast: 1.25,
@@ -125,8 +125,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'ektachrome': {
-    name: 'Ektachrome E100',
+  'chrome-100': {
+    name: 'K-Chrome 100',
     shadowShift: { r: 0.0, g: 0.01, b: 0.02 },
     highlightShift: { r: 0.01, g: 0.0, b: 0.01 },
     contrast: 1.15,
@@ -137,10 +137,10 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  // ==================== FUJIFILM COLOR NEGATIVE ====================
+  // ==================== COLOR NEGATIVE (ALT) ====================
 
-  'superia': {
-    name: 'Fujifilm Superia 400',
+  'verdant-400': {
+    name: 'F-Verdant 400',
     shadowShift: { r: -0.02, g: 0.035, b: 0.01 },
     highlightShift: { r: 0.0, g: 0.025, b: -0.01 },
     contrast: 1.08,
@@ -151,8 +151,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'fuji-400h': {
-    name: 'Fujifilm Pro 400H',
+  'f-portrait-400': {
+    name: 'F-Portrait 400H',
     shadowShift: { r: -0.01, g: 0.02, b: 0.02 },
     highlightShift: { r: 0.01, g: 0.015, b: 0.01 },
     contrast: 0.9,
@@ -164,8 +164,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     colorMatrix: MAT_FUJI,
   },
 
-  'fuji-c200': {
-    name: 'Fujifilm C200',
+  'f-c200': {
+    name: 'F-Color 200',
     shadowShift: { r: -0.01, g: 0.025, b: 0.0 },
     highlightShift: { r: 0.01, g: 0.02, b: -0.01 },
     contrast: 1.05,
@@ -176,10 +176,10 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  // ==================== FUJIFILM SLIDE ====================
+  // ==================== SLIDE (ALT) ====================
 
-  'provia': {
-    name: 'Fujifilm Provia 100F',
+  'natural-100': {
+    name: 'F-Natural 100F',
     shadowShift: { r: 0.0, g: 0.005, b: 0.01 },
     highlightShift: { r: 0.01, g: 0.005, b: 0.005 },
     contrast: 1.08,
@@ -190,8 +190,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'velvia': {
-    name: 'Fujifilm Velvia 50',
+  'vivid-50': {
+    name: 'F-Vivid 50',
     shadowShift: { r: 0.01, g: 0.0, b: 0.03 },
     highlightShift: { r: 0.03, g: 0.01, b: 0.02 },
     contrast: 1.25,
@@ -203,8 +203,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  'astia': {
-    name: 'Fujifilm Astia 100F',
+  'soft-100': {
+    name: 'F-Soft 100',
     shadowShift: { r: 0.005, g: 0.01, b: 0.01 },
     highlightShift: { r: 0.015, g: 0.01, b: 0.005 },
     contrast: 1.02,
@@ -215,10 +215,10 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: false,
   },
 
-  // ==================== CINESTILL (CINEMA) ====================
+  // ==================== CINEMA ====================
 
-  'cinestill-800t': {
-    name: 'CineStill 800T',
+  'motion-800t': {
+    name: 'C-Motion 800T',
     shadowShift: { r: -0.03, g: 0.01, b: 0.05 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.03 },
     contrast: 1.05,
@@ -234,8 +234,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     ], // Halation-heavy, cool shadows
   },
 
-  'cinestill-50d': {
-    name: 'CineStill 50D',
+  'motion-50d': {
+    name: 'C-Motion 50D',
     shadowShift: { r: -0.01, g: 0.005, b: 0.02 },
     highlightShift: { r: 0.02, g: 0.01, b: 0.01 },
     contrast: 1.12,
@@ -248,8 +248,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
 
   // ==================== BLACK & WHITE ====================
 
-  'hp5': {
-    name: 'Ilford HP5 Plus 400',
+  'mono-classic-400': {
+    name: 'I-Classic 400',
     shadowShift: { r: 0.0, g: 0.0, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.2,
@@ -260,8 +260,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: true,
   },
 
-  'trix': {
-    name: 'Kodak Tri-X 400',
+  'mono-classic-tx': {
+    name: 'K-Classic 400',
     shadowShift: { r: 0.0, g: 0.0, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.18,
@@ -272,8 +272,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: true,
   },
 
-  'delta': {
-    name: 'Ilford Delta 3200',
+  'mono-grain-3200': {
+    name: 'I-Grain 3200',
     shadowShift: { r: 0.0, g: 0.0, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.28,
@@ -284,8 +284,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: true,
   },
 
-  'tmax': {
-    name: 'Kodak T-Max 100',
+  'mono-fine-100': {
+    name: 'K-Fine 100',
     shadowShift: { r: 0.0, g: 0.0, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.15,
@@ -297,8 +297,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: true,
   },
 
-  'acros': {
-    name: 'Fujifilm Acros 100',
+  'mono-fine-ac': {
+    name: 'F-Fine 100',
     shadowShift: { r: 0.0, g: 0.0, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.1,
@@ -309,8 +309,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     isBlackAndWhite: true,
   },
 
-  'pan-f': {
-    name: 'Ilford Pan F Plus 50',
+  'mono-fine-pf': {
+    name: 'I-Fine 50',
     shadowShift: { r: 0.0, g: 0.0, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.22,
@@ -323,8 +323,8 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
 
   // ==================== SPECIAL RECIPES ====================
 
-  'kodak-2383': {
-    name: 'Kodak 2383 Print Film',
+  'cinema-2383': {
+    name: 'Cinema 2383 (Print Film)',
     shadowShift: { r: -0.02, g: -0.01, b: 0.02 }, // Teal shadows
     highlightShift: { r: 0.02, g: 0.01, b: -0.01 }, // Warm highlights
     contrast: 1.25, // High contrast print look
@@ -360,7 +360,7 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
   },
 
   'reala-ace': {
-    name: 'Fujifilm Reala Ace',
+    name: 'F-Color Reala Ace',
     shadowShift: { r: 0.0, g: 0.01, b: 0.0 },
     highlightShift: { r: 0.0, g: 0.0, b: 0.0 },
     contrast: 1.05,
@@ -382,36 +382,36 @@ export function getFilmDisplayName(type: FilmType): string {
 // 胶片类型列表 (用于 UI) - 分类展示
 export const filmTypeList: { value: FilmType; label: string; category: 'color' | 'slide' | 'cinema' | 'bw' }[] = [
   { value: 'none', label: 'None', category: 'color' },
-  // Kodak Color Negative
-  { value: 'kodak-gold', label: 'Kodak Gold 200 (Pro)', category: 'color' },
-  { value: 'portra-160', label: 'Portra 160', category: 'color' },
-  { value: 'portra-400', label: 'Portra 400 (Pro)', category: 'color' },
-  { value: 'portra-800', label: 'Portra 800', category: 'color' },
-  { value: 'ektar', label: 'Ektar 100', category: 'color' },
-  { value: 'ultramax', label: 'Ultramax 400', category: 'color' },
-  { value: 'colorplus', label: 'ColorPlus 200', category: 'color' },
-  // Fuji Color Negative
-  { value: 'superia', label: 'Superia 400', category: 'color' },
-  { value: 'fuji-400h', label: 'Pro 400H (Pro)', category: 'color' },
-  { value: 'fuji-c200', label: 'C200', category: 'color' },
+  // Color Negative
+  { value: 'amber-gold', label: 'K-Amber Gold 200 (Pro)', category: 'color' },
+  { value: 'portrait-160', label: 'P-Portrait 160', category: 'color' },
+  { value: 'portrait-400', label: 'P-Portrait 400 (Pro)', category: 'color' },
+  { value: 'portrait-800', label: 'P-Portrait 800', category: 'color' },
+  { value: 'vivid-100', label: 'K-Vivid 100', category: 'color' },
+  { value: 'max-400', label: 'K-Max 400', category: 'color' },
+  { value: 'budget-color', label: 'K-Color 200', category: 'color' },
+  // Color Negative (Alt)
+  { value: 'verdant-400', label: 'F-Verdant 400', category: 'color' },
+  { value: 'f-portrait-400', label: 'F-Portrait 400H (Pro)', category: 'color' },
+  { value: 'f-c200', label: 'F-Color 200', category: 'color' },
   // Slide Films
-  { value: 'kodachrome', label: 'Kodachrome 64', category: 'slide' },
-  { value: 'ektachrome', label: 'Ektachrome E100', category: 'slide' },
-  { value: 'provia', label: 'Provia 100F', category: 'slide' },
-  { value: 'velvia', label: 'Velvia 50', category: 'slide' },
-  { value: 'astia', label: 'Astia 100F', category: 'slide' },
+  { value: 'vintage-chrome', label: 'K-Vintage 64', category: 'slide' },
+  { value: 'chrome-100', label: 'K-Chrome 100', category: 'slide' },
+  { value: 'natural-100', label: 'F-Natural 100F', category: 'slide' },
+  { value: 'vivid-50', label: 'F-Vivid 50', category: 'slide' },
+  { value: 'soft-100', label: 'F-Soft 100', category: 'slide' },
   // Cinema
-  { value: 'cinestill-800t', label: 'CineStill 800T (Pro)', category: 'cinema' },
-  { value: 'cinestill-50d', label: 'CineStill 50D', category: 'cinema' },
+  { value: 'motion-800t', label: 'C-Motion 800T (Pro)', category: 'cinema' },
+  { value: 'motion-50d', label: 'C-Motion 50D', category: 'cinema' },
   // Black & White
-  { value: 'hp5', label: 'HP5 Plus', category: 'bw' },
-  { value: 'trix', label: 'Tri-X 400', category: 'bw' },
-  { value: 'delta', label: 'Delta 3200', category: 'bw' },
-  { value: 'tmax', label: 'T-Max 100', category: 'bw' },
-  { value: 'acros', label: 'Acros 100', category: 'bw' },
-  { value: 'pan-f', label: 'Pan F 50', category: 'bw' },
+  { value: 'mono-classic-400', label: 'I-Classic 400', category: 'bw' },
+  { value: 'mono-classic-tx', label: 'K-Classic 400', category: 'bw' },
+  { value: 'mono-grain-3200', label: 'I-Grain 3200', category: 'bw' },
+  { value: 'mono-fine-100', label: 'K-Fine 100', category: 'bw' },
+  { value: 'mono-fine-ac', label: 'F-Fine 100', category: 'bw' },
+  { value: 'mono-fine-pf', label: 'I-Fine 50', category: 'bw' },
   // Recipes
-  { value: 'kodak-2383', label: 'Kodak 2383 (Cinema) (Pro)', category: 'cinema' },
+  { value: 'cinema-2383', label: 'Cinema 2383 (Print Film) (Pro)', category: 'cinema' },
   { value: 'lomochrome-purple', label: 'LomoChrome Purple (Pro)', category: 'color' },
-  { value: 'reala-ace', label: 'Reala Ace', category: 'color' },
+  { value: 'reala-ace', label: 'F-Color Reala Ace', category: 'color' },
 ];

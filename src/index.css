@@ -1284,126 +1284,127 @@ button {
     background: linear-gradient(135deg, #888 0%, #666 100%);
 }
 
-/* Kodak */
-.film-preview-small.kodak-gold,
-.film-preview-tiny.kodak-gold {
+/* K-Series (Warm) */
+.film-preview-small.amber-gold,
+.film-preview-tiny.amber-gold {
     background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
 }
 
-.film-preview-small.portra-160,
-.film-preview-tiny.portra-160 {
+.film-preview-small.portrait-160,
+.film-preview-tiny.portrait-160 {
     background: linear-gradient(135deg, #e8d4c4 0%, #c9b8a8 100%);
 }
 
-.film-preview-small.portra-400,
-.film-preview-tiny.portra-400 {
+.film-preview-small.portrait-400,
+.film-preview-tiny.portrait-400 {
     background: linear-gradient(135deg, #d9c9b9 0%, #bfaf9f 100%);
 }
 
-.film-preview-small.portra-800,
-.film-preview-tiny.portra-800 {
+.film-preview-small.portrait-800,
+.film-preview-tiny.portrait-800 {
     background: linear-gradient(135deg, #cfbfaf 0%, #a99f8f 100%);
 }
 
-.film-preview-small.ektar,
-.film-preview-tiny.ektar {
+.film-preview-small.vivid-100,
+.film-preview-tiny.vivid-100 {
     background: linear-gradient(135deg, #dd6644 0%, #993311 100%);
 }
 
-.film-preview-small.ultramax,
-.film-preview-tiny.ultramax {
+.film-preview-small.max-400,
+.film-preview-tiny.max-400 {
     background: linear-gradient(135deg, #e8c070 0%, #c89830 100%);
 }
 
-.film-preview-small.colorplus,
-.film-preview-tiny.colorplus {
+.film-preview-small.budget-color,
+.film-preview-tiny.budget-color {
     background: linear-gradient(135deg, #dab870 0%, #b89840 100%);
 }
 
-/* Kodak Slide */
-.film-preview-small.kodachrome,
-.film-preview-tiny.kodachrome {
+/* K-Series Slide */
+.film-preview-small.vintage-chrome,
+.film-preview-tiny.vintage-chrome {
     background: linear-gradient(135deg, #e85020 0%, #b83010 100%);
 }
 
-.film-preview-small.ektachrome,
-.film-preview-tiny.ektachrome {
+.film-preview-small.chrome-100,
+.film-preview-tiny.chrome-100 {
     background: linear-gradient(135deg, #5080c8 0%, #3060a8 100%);
 }
 
-/* Fuji */
-.film-preview-small.superia,
-.film-preview-tiny.superia {
+/* F-Series (Verdant) */
+.film-preview-small.verdant-400,
+.film-preview-tiny.verdant-400 {
     background: linear-gradient(135deg, #70b880 0%, #509060 100%);
 }
 
-.film-preview-small.fuji-400h,
-.film-preview-tiny.fuji-400h {
+.film-preview-small.f-portrait-400,
+.film-preview-tiny.f-portrait-400 {
     background: linear-gradient(135deg, #90c8b8 0%, #70a898 100%);
 }
 
-.film-preview-small.fuji-c200,
-.film-preview-tiny.fuji-c200 {
+.film-preview-small.f-c200,
+.film-preview-tiny.f-c200 {
     background: linear-gradient(135deg, #80b890 0%, #60a070 100%);
 }
 
-/* Fuji Slide */
-.film-preview-small.provia,
-.film-preview-tiny.provia {
+/* F-Series Slide */
+.film-preview-small.natural-100,
+.film-preview-tiny.natural-100 {
     background: linear-gradient(135deg, #6090c0 0%, #4070a0 100%);
 }
 
-.film-preview-small.velvia,
-.film-preview-tiny.velvia {
+.film-preview-small.vivid-50,
+.film-preview-tiny.vivid-50 {
     background: linear-gradient(135deg, #2060b0 0%, #104090 100%);
 }
 
-.film-preview-small.astia,
-.film-preview-tiny.astia {
+.film-preview-small.soft-100,
+.film-preview-tiny.soft-100 {
     background: linear-gradient(135deg, #8090a0 0%, #607080 100%);
 }
 
 /* Cinema */
-.film-preview-small.cinestill-800t,
-.film-preview-tiny.cinestill-800t {
+.film-preview-small.motion-800t,
+.film-preview-tiny.motion-800t {
     background: linear-gradient(135deg, #3080a0 0%, #206080 100%);
 }
 
-.film-preview-small.cinestill-50d,
-.film-preview-tiny.cinestill-50d {
+.film-preview-small.motion-50d,
+.film-preview-tiny.motion-50d {
     background: linear-gradient(135deg, #6090a0 0%, #407080 100%);
 }
 
-/* B&W */
-.film-preview-small.hp5,
-.film-preview-tiny.hp5 {
+/* Monochrome */
+.film-preview-small.mono-classic-400,
+.film-preview-tiny.mono-classic-400 {
     background: linear-gradient(135deg, #888 0%, #555 100%);
 }
 
-.film-preview-small.trix,
-.film-preview-tiny.trix {
+.film-preview-small.mono-classic-tx,
+.film-preview-tiny.mono-classic-tx {
     background: linear-gradient(135deg, #777 0%, #444 100%);
 }
 
-.film-preview-small.delta,
-.film-preview-tiny.delta {
+.film-preview-small.mono-grain-3200,
+.film-preview-tiny.mono-grain-3200 {
     background: linear-gradient(135deg, #666 0%, #333 100%);
 }
 
-.film-preview-small.tmax,
-.film-preview-tiny.tmax {
+.film-preview-small.mono-fine-100,
+.film-preview-tiny.mono-fine-100 {
     background: linear-gradient(135deg, #999 0%, #666 100%);
 }
 
-.film-preview-small.acros,
-.film-preview-tiny.acros {
+.film-preview-small.mono-fine-ac,
+.film-preview-tiny.mono-fine-ac {
     background: linear-gradient(135deg, #aaa 0%, #777 100%);
 }
 
-.film-preview-small.pan-f,
-.film-preview-tiny.pan-f {
+.film-preview-small.mono-fine-pf,
+.film-preview-tiny.mono-fine-pf {
     background: linear-gradient(135deg, #bbb 0%, #888 100%);
 }
+
 
 /* ==================== MOBILE EXPERIENCE ==================== */
 
@@ -1915,4 +1916,15 @@ button {
     .film-dropdown-menu {
         max-height: 70vh;
     }
+}
+
+.declaration-footer {
+    margin-top: auto;
+    padding: 30px 10px 10px;
+    font-size: 10px;
+    color: #555;
+    border-top: 1px solid #222;
+    line-height: 1.5;
+    text-align: center;
+    font-style: italic;
 }

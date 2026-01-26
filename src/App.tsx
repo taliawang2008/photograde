@@ -623,6 +623,13 @@ function App() {
               <ParamSlider dispatch={dispatch} label="LUT Strength" value={params.lutStrength} min={0} max={100} param="lutStrength" />
             </div>
           )}
+
+          {/* Copyright / Non-Commercial Declaration (Left Panel) */}
+          <div className="declaration-footer">
+            Photograde is an educational project for non-commercial use only.
+            <br />
+            Film names are inspired by classic aesthetics for research.
+          </div>
         </div>
 
         {/* 中间面板 (Canvas) - Always visible, panels slide over */}
@@ -777,6 +784,11 @@ function App() {
           {/* 直方图 */}
           <div className="section">
             <Histogram data={histogramData} width={240} height={100} />
+          </div>
+
+          {/* Copyright / Non-Commercial Declaration (Right Panel) */}
+          <div className="declaration-footer">
+            Educational research project. Non-commercial use only.
           </div>
         </div>
 
