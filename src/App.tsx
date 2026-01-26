@@ -101,7 +101,7 @@ function gradingReducer(state: GradingParams, action: GradingAction): GradingPar
       return {
         ...state,
         filmType: 'none',
-        filmStrength: 100,
+        filmStrength: 50,
         grainAmount: 0,
         grainSize: 50,
         fade: 0,
@@ -266,6 +266,26 @@ function App() {
       }
       if (profile.contrastOverride !== undefined) {
         dispatch({ type: 'SET_PARAM', param: 'contrast', value: profile.contrastOverride });
+      }
+
+      // Apply grain settings from profile (0-1 range to 0-100 range)
+      if (profile.grainAmount !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'grainAmount', value: profile.grainAmount * 100 });
+      }
+      if (profile.grainSize !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'grainSize', value: profile.grainSize * 100 });
+      }
+      if (profile.grainChromacity !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'grainChromacity', value: profile.grainChromacity * 100 });
+      }
+      if (profile.grainHighlights !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'grainHighlights', value: profile.grainHighlights * 100 });
+      }
+      if (profile.grainShadows !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'grainShadows', value: profile.grainShadows * 100 });
+      }
+      if (profile.acutance !== undefined) {
+        dispatch({ type: 'SET_PARAM', param: 'acutance', value: profile.acutance * 100 });
       }
     }
   };

@@ -2,6 +2,7 @@
 import type { FilmType, FilmProfile } from '../types';
 
 // Shared Matrices
+// Shared Matrices
 type Mat3 = [number, number, number, number, number, number, number, number, number];
 
 const MAT_WARM: Mat3 = [
@@ -18,12 +19,6 @@ const MAT_FUJI: Mat3 = [
   0.95, 0.05, 0.0,
   0.0, 1.02, -0.02,
   0.0, 0.05, 1.05
-];
-// B&W Filter (Yellow: Pass R+G, block B slightly) - Reserved for future specialized B&W presets
-const MAT_BW_YELLOW: Mat3 = [
-  0.9, 0.05, 0.05,
-  0.05, 0.9, 0.05,
-  0.0, 0.0, 0.5
 ];
 
 export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {

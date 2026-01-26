@@ -203,7 +203,7 @@ export const defaultGradingParams: GradingParams = {
 
   // 胶片
   filmType: 'none',
-  filmStrength: 100,
+  filmStrength: 50,
 
   // 高级胶片响应
   filmToe: 0,
