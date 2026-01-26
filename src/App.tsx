@@ -426,17 +426,26 @@ function App() {
               onPreview={setPreviewFilmType}
             />
 
+            {/* Revert to authentic matrices: only enable if profile has matrix */}
             {params.filmType !== 'none' && (
               <div style={{ margin: '8px 0', display: 'flex', alignItems: 'center' }}>
                 <input
                   type="checkbox"
                   id="useMatrix"
                   checked={params.useFilmColorMatrix}
+                  disabled={!filmProfiles[params.filmType]?.colorMatrix} // Disable if no matrix
                   onChange={(e) => dispatch({ type: 'SET_PARAM', param: 'useFilmColorMatrix', value: e.target.checked })}
-                  style={{ width: 'auto', marginRight: '8px', cursor: 'pointer' }}
+                  style={{ width: 'auto', marginRight: '8px', cursor: filmProfiles[params.filmType]?.colorMatrix ? 'pointer' : 'not-allowed' }}
                 />
-                <label htmlFor="useMatrix" style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>
-                  Use Pro Color Matrix
+                <label
+                  htmlFor="useMatrix"
+                  style={{
+                    fontSize: '12px',
+                    color: filmProfiles[params.filmType]?.colorMatrix ? '#ccc' : '#666',
+                    cursor: filmProfiles[params.filmType]?.colorMatrix ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  Use Pro Color Matrix {!filmProfiles[params.filmType]?.colorMatrix && '(Unavailable)'}
                 </label>
               </div>
             )}

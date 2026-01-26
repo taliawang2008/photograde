@@ -58,7 +58,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.6,
     isBlackAndWhite: false,
-    colorMatrix: MAT_PORTRAIT,
   },
 
   'portra-400': {
@@ -84,7 +83,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.035,
     grainSize: 1.1,
     isBlackAndWhite: false,
-    colorMatrix: MAT_PORTRAIT,
   },
 
   'ektar': {
@@ -97,7 +95,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.008,
     grainSize: 0.4,
     isBlackAndWhite: false,
-    colorMatrix: MAT_VIVID,
   },
 
   'ultramax': {
@@ -110,7 +107,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.028,
     grainSize: 0.85,
     isBlackAndWhite: false,
-    colorMatrix: MAT_WARM,
   },
 
   'colorplus': {
@@ -123,7 +119,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.022,
     grainSize: 0.75,
     isBlackAndWhite: false,
-    colorMatrix: MAT_WARM,
   },
 
   // ==================== KODAK SLIDE/REVERSAL ====================
@@ -138,7 +133,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.012,
     grainSize: 0.5,
     isBlackAndWhite: false,
-    colorMatrix: MAT_VIVID,
   },
 
   'ektachrome': {
@@ -151,7 +145,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.45,
     isBlackAndWhite: false,
-    colorMatrix: MAT_FUJI, // Cool bias
   },
 
   // ==================== FUJIFILM COLOR NEGATIVE ====================
@@ -166,7 +159,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.025,
     grainSize: 0.85,
     isBlackAndWhite: false,
-    colorMatrix: MAT_FUJI,
   },
 
   'fuji-400h': {
@@ -192,7 +184,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.02,
     grainSize: 0.7,
     isBlackAndWhite: false,
-    colorMatrix: MAT_FUJI,
   },
 
   // ==================== FUJIFILM SLIDE ====================
@@ -232,7 +223,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.007,
     grainSize: 0.45,
     isBlackAndWhite: false,
-    colorMatrix: MAT_PORTRAIT, // Softer slide
   },
 
   // ==================== CINESTILL (CINEMA) ====================
@@ -264,7 +254,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.5,
     isBlackAndWhite: false,
-    colorMatrix: MAT_PORTRAIT,
   },
 
   // ==================== BLACK & WHITE ====================
@@ -279,7 +268,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.035,
     grainSize: 0.85,
     isBlackAndWhite: true,
-    colorMatrix: MAT_BW_YELLOW,
   },
 
   'trix': {
@@ -292,7 +280,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.03,
     grainSize: 0.9,
     isBlackAndWhite: true,
-    colorMatrix: MAT_BW_YELLOW,
   },
 
   'delta': {
@@ -305,7 +292,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.055,
     grainSize: 1.3,
     isBlackAndWhite: true,
-    colorMatrix: MAT_BW_YELLOW,
   },
 
   'tmax': {
@@ -319,7 +305,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainSize: 0.5,
     acutance: 0.4, // Very high acutance (T-Grain)
     isBlackAndWhite: true,
-    colorMatrix: MAT_BW_YELLOW,
   },
 
   'acros': {
@@ -332,7 +317,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.01,
     grainSize: 0.45,
     isBlackAndWhite: true,
-    colorMatrix: MAT_BW_YELLOW,
   },
 
   'pan-f': {
@@ -345,7 +329,6 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.006,
     grainSize: 0.35,
     isBlackAndWhite: true,
-    colorMatrix: MAT_BW_YELLOW,
   },
 
   // ==================== SPECIAL RECIPES ====================
@@ -410,16 +393,16 @@ export function getFilmDisplayName(type: FilmType): string {
 export const filmTypeList: { value: FilmType; label: string; category: 'color' | 'slide' | 'cinema' | 'bw' }[] = [
   { value: 'none', label: 'None', category: 'color' },
   // Kodak Color Negative
-  { value: 'kodak-gold', label: 'Kodak Gold 200', category: 'color' },
+  { value: 'kodak-gold', label: 'Kodak Gold 200 (Pro)', category: 'color' },
   { value: 'portra-160', label: 'Portra 160', category: 'color' },
-  { value: 'portra-400', label: 'Portra 400', category: 'color' },
+  { value: 'portra-400', label: 'Portra 400 (Pro)', category: 'color' },
   { value: 'portra-800', label: 'Portra 800', category: 'color' },
   { value: 'ektar', label: 'Ektar 100', category: 'color' },
   { value: 'ultramax', label: 'Ultramax 400', category: 'color' },
   { value: 'colorplus', label: 'ColorPlus 200', category: 'color' },
   // Fuji Color Negative
   { value: 'superia', label: 'Superia 400', category: 'color' },
-  { value: 'fuji-400h', label: 'Pro 400H', category: 'color' },
+  { value: 'fuji-400h', label: 'Pro 400H (Pro)', category: 'color' },
   { value: 'fuji-c200', label: 'C200', category: 'color' },
   // Slide Films
   { value: 'kodachrome', label: 'Kodachrome 64', category: 'slide' },
@@ -428,7 +411,7 @@ export const filmTypeList: { value: FilmType; label: string; category: 'color' |
   { value: 'velvia', label: 'Velvia 50', category: 'slide' },
   { value: 'astia', label: 'Astia 100F', category: 'slide' },
   // Cinema
-  { value: 'cinestill-800t', label: 'CineStill 800T', category: 'cinema' },
+  { value: 'cinestill-800t', label: 'CineStill 800T (Pro)', category: 'cinema' },
   { value: 'cinestill-50d', label: 'CineStill 50D', category: 'cinema' },
   // Black & White
   { value: 'hp5', label: 'HP5 Plus', category: 'bw' },
@@ -438,7 +421,7 @@ export const filmTypeList: { value: FilmType; label: string; category: 'color' |
   { value: 'acros', label: 'Acros 100', category: 'bw' },
   { value: 'pan-f', label: 'Pan F 50', category: 'bw' },
   // Recipes
-  { value: 'kodak-2383', label: 'Kodak 2383 (Cinema)', category: 'cinema' },
-  { value: 'lomochrome-purple', label: 'LomoChrome Purple', category: 'color' },
+  { value: 'kodak-2383', label: 'Kodak 2383 (Cinema) (Pro)', category: 'cinema' },
+  { value: 'lomochrome-purple', label: 'LomoChrome Purple (Pro)', category: 'color' },
   { value: 'reala-ace', label: 'Reala Ace', category: 'color' },
 ];
