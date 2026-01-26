@@ -115,6 +115,7 @@ export interface GradingParams {
   grainSize: number;     // 0 to 100
 
   // === 特效 ===
+  useFilmColorMatrix: boolean; // Enable advanced film color matrix
   fade: number;          // 0 to 100 (褪色效果)
   halation: number;      // 0 to 100 (高光溢出)
   halationColor: string; // Hex color for halation glow (default: #FF5500)
@@ -204,6 +205,7 @@ export const defaultGradingParams: GradingParams = {
   grainSize: 50,
 
   // 特效
+  useFilmColorMatrix: true, // Default to true for better quality
   fade: 0,
   halation: 0,
   halationColor: '#FF5500',
@@ -233,6 +235,13 @@ export interface FilmProfile {
   grainSize: number;
   // 是否黑白
   isBlackAndWhite: boolean;
+
+  // Advanced Color Matrix (3x3)
+  colorMatrix?: [
+    number, number, number,
+    number, number, number,
+    number, number, number
+  ];
 }
 
 // Action 类型 (用于 useReducer)

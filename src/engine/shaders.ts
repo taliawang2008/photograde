@@ -56,6 +56,8 @@ export const fragmentShaderSource = `
   // === 胶片效果 ===
   uniform float u_filmStrength;      // 0.0 to 1.0
   uniform int u_filmType;            // 0=none, 1-9=各种胶片
+  uniform bool u_useFilmColorMatrix; // Use advanced channel mixing
+  uniform mat3 u_filmColorMatrix;    // 3x3 Color Matrix for channel crosstalk
   uniform float u_filmLUTSize;       // 3D LUT 尺寸 (通常 32)
 
   // === 颗粒效果 ===
@@ -511,6 +513,11 @@ export const fragmentShaderSource = `
     vec3 color1 = texture2D(lut, vec2(xOffset1, y)).rgb;
 
     return mix(color0, color1, sliceFrac);
+  }
+
+  // 9.5 High-Precision Film Color Matrix
+  vec3 applyFilmColorMatrix(vec3 color, mat3 matrix) {
+    return matrix * color;
   }
 
   // 10. 胶片模拟效果 (内置 - 24种胶片)
@@ -1074,6 +1081,12 @@ export const fragmentShaderSource = `
     }
 
     // 10. 胶片模拟
+    // 10. 胶片模拟 (Hybrid: Matrix + Algorithmic)
+    // First apply 3x3 Matrix if enabled (Channel Crosstalk)
+    if (u_useFilmColorMatrix) {
+      color = applyFilmColorMatrix(color, u_filmColorMatrix);
+    }
+    // Then apply algorithmic adjustments (Contrast, Saturation, Tint)
     color = applyFilmEmulation(color, u_filmType, u_filmStrength);
 
     // 11. S-Curve 色调映射 (胶片响应)

@@ -1,5 +1,6 @@
 import { vertexShaderSource, fragmentShaderSource } from './shaders';
 import { logProfileToInt } from './logProfiles';
+import { filmProfiles } from './filmProfiles'; // New import
 import type { GradingParams, CurvesData, CurvePoint, LUT3D, FilmType } from '../types';
 
 // 胶片类型到整数的映射
@@ -118,6 +119,7 @@ export class WebGLEngine {
       'u_shadowLift', 'u_midtoneGamma', 'u_highlightGain',
       // 胶片效果
       'u_filmStrength', 'u_filmType', 'u_filmLUTSize',
+      'u_useFilmColorMatrix', 'u_filmColorMatrix', // New uniforms
       // 高级胶片响应
       'u_filmToe', 'u_filmShoulder', 'u_crossoverShift',
       // 颗粒效果
@@ -297,9 +299,21 @@ export class WebGLEngine {
 
     // === 胶片效果 ===
     this.gl.uniform1f(this.uniforms['u_filmStrength']!, (params.filmStrength || 0) / 100.0);
-    this.gl.uniform1i(this.uniforms['u_filmType']!, filmTypeToInt[params.filmType]);
+    this.gl.uniform1i(this.uniforms['u_filmType']!, filmTypeToInt[params.filmType] || 0);
 
-    // === 高级胶片响应 ===
+    // Film Color Matrix logic
+    const currentFilm = params.filmType !== 'none' ? filmProfiles[params.filmType] : null;
+    const hasMatrix = currentFilm && currentFilm.colorMatrix && params.useFilmColorMatrix;
+
+    this.gl.uniform1i(this.uniforms['u_useFilmColorMatrix']!, hasMatrix ? 1 : 0);
+
+    if (hasMatrix && currentFilm?.colorMatrix) {
+      this.gl.uniformMatrix3fv(this.uniforms['u_filmColorMatrix']!, false, currentFilm.colorMatrix);
+    } else {
+      // Fallback to Identity
+      this.gl.uniformMatrix3fv(this.uniforms['u_filmColorMatrix']!, false, [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    }
+
     this.gl.uniform1f(this.uniforms['u_filmToe']!, (params.filmToe || 0) / 100.0);
     this.gl.uniform1f(this.uniforms['u_filmShoulder']!, (params.filmShoulder || 0) / 100.0);
     this.gl.uniform3f(

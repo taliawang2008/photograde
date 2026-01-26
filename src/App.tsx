@@ -401,6 +401,21 @@ function App() {
               onPreview={setPreviewFilmType}
             />
 
+            {params.filmType !== 'none' && (
+              <div style={{ margin: '8px 0', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  id="useMatrix"
+                  checked={params.useFilmColorMatrix}
+                  onChange={(e) => dispatch({ type: 'SET_PARAM', param: 'useFilmColorMatrix', value: e.target.checked })}
+                  style={{ width: 'auto', marginRight: '8px', cursor: 'pointer' }}
+                />
+                <label htmlFor="useMatrix" style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>
+                  Use Pro Color Matrix
+                </label>
+              </div>
+            )}
+
             <ParamSlider dispatch={dispatch} label="Film Strength" value={params.filmStrength} min={0} max={100} param="filmStrength" />
 
             {/* 高级胶片响应 */}

@@ -14,6 +14,11 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.025,
     grainSize: 0.8,
     isBlackAndWhite: false,
+    colorMatrix: [
+      1.05, -0.05, 0.0,
+      0.0, 1.02, -0.02,
+      -0.05, 0.05, 1.0
+    ], // Warm/Golden shift
   },
 
   'portra-160': {
@@ -38,6 +43,11 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.018,
     grainSize: 0.9,
     isBlackAndWhite: false,
+    colorMatrix: [
+      1.02, -0.01, -0.01,
+      0.01, 1.01, -0.02,
+      -0.01, 0.01, 1.0
+    ], // Accurate skin tones
   },
 
   'portra-800': {
@@ -138,6 +148,11 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.015,
     grainSize: 0.8,
     isBlackAndWhite: false,
+    colorMatrix: [
+      0.95, 0.05, 0.0,
+      0.0, 1.02, -0.02,
+      0.0, 0.05, 1.05
+    ], // Cool/Green-ish
   },
 
   'fuji-c200': {
@@ -202,6 +217,11 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
     grainAmount: 0.04,
     grainSize: 1.0,
     isBlackAndWhite: false,
+    colorMatrix: [
+      1.0, 0.0, 0.0,
+      0.0, 0.95, 0.05,
+      0.0, 0.05, 1.15
+    ], // Halation-heavy, cool shadows
   },
 
   'cinestill-50d': {
