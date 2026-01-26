@@ -636,6 +636,12 @@ function App() {
 
           </div>
 
+          {/* Cinematography Filters */}
+          <FiltersPanel
+            params={params}
+            onParamChange={(param, value) => dispatch({ type: 'SET_PARAM', param, value })}
+          />
+
           {/* 曝光控制 */}
           {/* Input Log Profile */}
           <div className="section">
@@ -866,11 +872,7 @@ function App() {
             />
           </div>
 
-          {/* Cinematography Filters */}
-          <FiltersPanel
-            params={params}
-            onParamChange={(param, value) => dispatch({ type: 'SET_PARAM', param, value })}
-          />
+
 
           {/* 直方图 */}
           <div className="section">
