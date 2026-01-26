@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useReducer, useCallback } from 'react';
 import { WebGLEngine } from './engine/WebGLEngine';
+import { ImageAnalyzer } from './engine/ImageAnalyzer';
 import { CurveEditor } from './components/CurveEditor';
 import { ColorWheel } from './components/ColorWheel';
 import { Histogram, calculateHistogram } from './components/Histogram';
@@ -7,6 +8,7 @@ import { ParamSlider } from './components/ParamSlider';
 import FilmSelector from './components/FilmSelector';
 import LogSelector from './components/LogSelector';
 import FiltersPanel from './components/FiltersPanel';
+import { AdaptivePanel } from './components/AdaptivePanel';
 import { filmProfiles } from './engine/filmProfiles';
 import { loadCubeLUTFromFile, loadCubeLUTFromURL, downloadCubeLUT, createIdentityLUT } from './engine/LUTParser';
 import { CollapsibleSection } from './components/CollapsibleSection';
@@ -368,6 +370,33 @@ function App() {
             const params = computeAutoParams(stats);
             setAutoParams(params);
             setIsNormalized(false); // Reset toggle on new image
+
+            // Also analyze for Adaptive Color Matching (Lab Stats)
+            try {
+              const adpImageData = new ImageData(
+                new Uint8ClampedArray(imageData.data),
+                img.width,
+                img.height
+              );
+              const labStats = ImageAnalyzer.analyze(adpImageData);
+              dispatch({
+                type: 'MERGE_PARAMS',
+                params: {
+                  adaptiveSourceMean: {
+                    L: labStats.lab.meanL,
+                    a: labStats.lab.meanA,
+                    b: labStats.lab.meanB
+                  },
+                  adaptiveSourceStd: {
+                    L: labStats.lab.stdL,
+                    a: labStats.lab.stdA,
+                    b: labStats.lab.stdB
+                  }
+                }
+              });
+            } catch (e) {
+              console.error("Failed to analyze image for adaptive color:", e);
+            }
           }
         };
         img.src = event.target?.result as string;
@@ -704,6 +733,9 @@ function App() {
             <ParamSlider dispatch={dispatch} label="Volume (Density)" value={params.spectralVolume} param="spectralVolume" />
             <ParamSlider dispatch={dispatch} label="Luminance" value={params.spectralLuminance} param="spectralLuminance" />
             <ParamSlider dispatch={dispatch} label="Hue Shift" value={params.spectralHue} param="spectralHue" />
+
+            <div className="subsection-title">🤖 Adaptive Color</div>
+            <AdaptivePanel params={params} dispatch={dispatch} />
           </div>
 
           {/* LUT 强度 */}

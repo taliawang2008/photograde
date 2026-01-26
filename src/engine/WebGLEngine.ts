@@ -140,6 +140,9 @@ export class WebGLEngine {
       // Cinematography Filters
       'u_filterType', 'u_filterStrength', 'u_filterGlowRadius',
       'u_filterGlowThreshold', 'u_filterSharpness', 'u_filterStreakAngle',
+      // Adaptive Color Matching (Reinhard Transfer)
+      'u_useAdaptiveColor', 'u_adaptiveStrength',
+      'u_sourceMean', 'u_sourceStd', 'u_targetMean', 'u_targetStd',
     ];
 
     uniformNames.forEach(name => {
@@ -408,6 +411,25 @@ export class WebGLEngine {
     this.gl.uniform1f(this.uniforms['u_filterGlowThreshold']!, filterGlowThreshold);
     this.gl.uniform1f(this.uniforms['u_filterSharpness']!, filterSharpness);
     this.gl.uniform1f(this.uniforms['u_filterStreakAngle']!, filterStreakAngle);
+
+    // Adaptive Color Matching (Reinhard Transfer)
+    const useAdaptive = params.useAdaptiveColor ?? false;
+    const adaptiveStrength = (params.adaptiveStrength ?? 0) / 100.0;
+
+    this.gl.uniform1i(this.uniforms['u_useAdaptiveColor']!, useAdaptive ? 1 : 0);
+    this.gl.uniform1f(this.uniforms['u_adaptiveStrength']!, adaptiveStrength);
+
+    // Source stats (from analyzed input image)
+    const srcMean = params.adaptiveSourceMean ?? { L: 50, a: 0, b: 0 };
+    const srcStd = params.adaptiveSourceStd ?? { L: 20, a: 10, b: 10 };
+    this.gl.uniform3f(this.uniforms['u_sourceMean']!, srcMean.L, srcMean.a, srcMean.b);
+    this.gl.uniform3f(this.uniforms['u_sourceStd']!, srcStd.L, srcStd.a, srcStd.b);
+
+    // Target stats (from reference profile)
+    const tgtMean = params.adaptiveTargetMean ?? { L: 50, a: 0, b: 0 };
+    const tgtStd = params.adaptiveTargetStd ?? { L: 20, a: 10, b: 10 };
+    this.gl.uniform3f(this.uniforms['u_targetMean']!, tgtMean.L, tgtMean.a, tgtMean.b);
+    this.gl.uniform3f(this.uniforms['u_targetStd']!, tgtStd.L, tgtStd.a, tgtStd.b);
 
     this.render();
   }

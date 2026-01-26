@@ -105,6 +105,14 @@ export const fragmentShaderSource = `
   uniform float u_filterSharpness;   // 0.0 to 1.0
   uniform float u_filterStreakAngle; // 0.0 to 360.0
 
+  // === Adaptive Color Matching (Reinhard Transfer) ===
+  uniform bool u_useAdaptiveColor;   // Enable adaptive color matching
+  uniform float u_adaptiveStrength;  // 0.0 to 1.0
+  uniform vec3 u_sourceMean;         // Source image Lab mean (L, a, b)
+  uniform vec3 u_sourceStd;          // Source image Lab std dev
+  uniform vec3 u_targetMean;         // Target/reference Lab mean
+  uniform vec3 u_targetStd;          // Target/reference Lab std dev
+
   // ==================== 工具函数 ====================
 
   // 亮度计算 (BT.709)
@@ -190,6 +198,91 @@ export const fragmentShaderSource = `
       hue2rgb(p, q, h),
       hue2rgb(p, q, h - 1.0/3.0)
     );
+  }
+
+  // ==================== Lab Color Space ====================
+
+  // sRGB to Linear
+  float srgbToLinear(float v) {
+    return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4);
+  }
+
+  // Linear to sRGB
+  float linearToSrgb(float v) {
+    return v <= 0.0031308 ? v * 12.92 : 1.055 * pow(v, 1.0 / 2.4) - 0.055;
+  }
+
+  // RGB to Lab (D65 illuminant)
+  vec3 rgb2lab(vec3 rgb) {
+    // sRGB to linear
+    float r = srgbToLinear(rgb.r);
+    float g = srgbToLinear(rgb.g);
+    float b = srgbToLinear(rgb.b);
+
+    // Linear RGB to XYZ (D65)
+    float x = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047;
+    float y = (r * 0.2126729 + g * 0.7151522 + b * 0.0721750);
+    float z = (r * 0.0193339 + g * 0.1191920 + b * 0.9503041) / 1.08883;
+
+    // XYZ to Lab
+    float fx = x > 0.008856 ? pow(x, 1.0 / 3.0) : (7.787 * x) + 16.0 / 116.0;
+    float fy = y > 0.008856 ? pow(y, 1.0 / 3.0) : (7.787 * y) + 16.0 / 116.0;
+    float fz = z > 0.008856 ? pow(z, 1.0 / 3.0) : (7.787 * z) + 16.0 / 116.0;
+
+    return vec3(
+      (116.0 * fy) - 16.0,  // L
+      500.0 * (fx - fy),     // a
+      200.0 * (fy - fz)      // b
+    );
+  }
+
+  // Lab to RGB
+  vec3 lab2rgb(vec3 lab) {
+    float L = lab.x;
+    float a = lab.y;
+    float b = lab.z;
+
+    // Lab to XYZ
+    float fy = (L + 16.0) / 116.0;
+    float fx = a / 500.0 + fy;
+    float fz = fy - b / 200.0;
+
+    float x = fx * fx * fx > 0.008856 ? fx * fx * fx : (fx - 16.0 / 116.0) / 7.787;
+    float y = fy * fy * fy > 0.008856 ? fy * fy * fy : (fy - 16.0 / 116.0) / 7.787;
+    float z = fz * fz * fz > 0.008856 ? fz * fz * fz : (fz - 16.0 / 116.0) / 7.787;
+
+    // XYZ to linear RGB (D65)
+    x *= 0.95047;
+    z *= 1.08883;
+
+    float r =  3.2404542 * x - 1.5371385 * y - 0.4985314 * z;
+    float g = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z;
+    float bOut = 0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
+
+    // Linear to sRGB
+    return vec3(
+      clamp(linearToSrgb(r), 0.0, 1.0),
+      clamp(linearToSrgb(g), 0.0, 1.0),
+      clamp(linearToSrgb(bOut), 0.0, 1.0)
+    );
+  }
+
+  // Reinhard Color Transfer (in Lab space)
+  vec3 applyReinhardTransfer(vec3 color, vec3 srcMean, vec3 srcStd, vec3 tgtMean, vec3 tgtStd, float strength) {
+    if (strength <= 0.0) return color;
+
+    // Convert to Lab
+    vec3 lab = rgb2lab(color);
+
+    // Apply Reinhard transfer: output = (target_std / source_std) * (input - source_mean) + target_mean
+    vec3 normalized = (lab - srcMean) / max(srcStd, vec3(0.001));
+    vec3 transferred = normalized * tgtStd + tgtMean;
+
+    // Blend with original based on strength
+    lab = mix(lab, transferred, strength);
+
+    // Convert back to RGB
+    return lab2rgb(lab);
   }
 
   // ==================== 调色函数 ====================
@@ -795,6 +888,53 @@ export const fragmentShaderSource = `
     else if (filmType == 23) {
       filmColor = vec3(lum);
       filmColor = adjustContrast(filmColor, 0.22);
+    }
+
+    // ==================== SPECIAL RECIPES ====================
+
+    // 24: Cinema 2383 - Print film look
+    else if (filmType == 24) {
+      // Teal shadows, warm highlights, high contrast
+      filmColor += (1.0 - lum) * vec3(-0.02, -0.01, 0.02);
+      filmColor += lum * vec3(0.02, 0.01, -0.01);
+      filmColor = adjustContrast(filmColor, 0.25);
+      hsl = rgb2hsl(filmColor);
+      hsl.y *= 1.1;
+      filmColor = hsl2rgb(hsl);
+    }
+
+    // 25: LomoChrome Purple - Green to purple shift
+    else if (filmType == 25) {
+      // Swap green and purple channels
+      filmColor = vec3(
+        color.r + color.g * 0.5,
+        color.g * 0.1,
+        color.b + color.g * 0.4
+      );
+      filmColor = adjustContrast(filmColor, 0.1);
+      hsl = rgb2hsl(filmColor);
+      hsl.y *= 1.2;
+      filmColor = hsl2rgb(hsl);
+    }
+
+    // 26: Reala Ace - Neutral, accurate colors
+    else if (filmType == 26) {
+      filmColor.g *= 1.01;
+      filmColor = adjustContrast(filmColor, 0.05);
+    }
+
+    // 27: Autumn Breeze - Cinematic with green-yellow highlights, neutral shadows
+    else if (filmType == 27) {
+      // Cool/neutral shadows (reference RGB 44,44,43 - very neutral)
+      filmColor += (1.0 - smoothstep(0.0, 0.4, lum)) * vec3(-0.01, 0.01, 0.02);
+      // Green-yellow highlights with strong blue reduction (reference RGB 206,216,174)
+      filmColor += smoothstep(0.5, 1.0, lum) * vec3(0.0, 0.03, -0.12);
+      // Moderate contrast (don't crush blacks)
+      filmColor = adjustContrast(filmColor, 0.35);
+      // Subtle saturation adjustment (reference ~17%)
+      hsl = rgb2hsl(filmColor);
+      hsl.y *= 0.95;
+      filmColor = hsl2rgb(hsl);
     }
 
     return mix(color, filmColor, strength);
@@ -1424,6 +1564,12 @@ export const fragmentShaderSource = `
     // 0.5. Input LUT (如使用LUT方式的IDT)
     if (u_useInputLUT && u_inputLUTSize > 0.0) {
       color = apply3DLUT(color, u_inputLUT, u_inputLUTSize);
+    }
+
+    // 0.6. Adaptive Color Matching (Reinhard Transfer)
+    // Normalizes input image to match reference image color distribution
+    if (u_useAdaptiveColor && u_adaptiveStrength > 0.0) {
+      color = applyReinhardTransfer(color, u_sourceMean, u_sourceStd, u_targetMean, u_targetStd, u_adaptiveStrength);
     }
 
     // 1. 曝光

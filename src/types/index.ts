@@ -150,6 +150,14 @@ export interface GradingParams {
   filterGlowThreshold: number;   // 0 to 100
   filterSharpness: number;       // 0 to 100 (reduction amount)
   filterStreakAngle: number;     // 0 to 360 (for streak filter)
+
+  // === Adaptive Color Matching ===
+  useAdaptiveColor: boolean;     // Enable reference-based color matching
+  adaptiveStrength: number;      // 0 to 100 (blend with original)
+  adaptiveSourceMean?: { L: number; a: number; b: number };   // Computed from input
+  adaptiveSourceStd?: { L: number; a: number; b: number };    // Computed from input
+  adaptiveTargetMean?: { L: number; a: number; b: number };   // From reference profile
+  adaptiveTargetStd?: { L: number; a: number; b: number };    // From reference profile
 }
 
 // 直方图数据
@@ -253,6 +261,10 @@ export const defaultGradingParams: GradingParams = {
   filterGlowThreshold: 65,
   filterSharpness: 30,
   filterStreakAngle: 0,
+
+  // Adaptive Color
+  useAdaptiveColor: false,
+  adaptiveStrength: 100,
 };
 
 // 胶片配置

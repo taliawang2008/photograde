@@ -20,11 +20,6 @@ const MAT_FUJI: Mat3 = [
   0.0, 1.02, -0.02,
   0.0, 0.05, 1.05
 ];
-const MAT_AUTUMN: Mat3 = [
-  1.15, -0.1, -0.05,  // Red boosts, Green cuts
-  0.2, 0.85, -0.05,   // Green shifts to Red (Yellow)
-  -0.05, -0.05, 1.1   // Blue boosts slightly
-];
 
 export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
   // ==================== COLOR NEGATIVE ====================
@@ -46,33 +41,21 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
 
   'autumn-breeze': {
     name: 'F-Autumn Breeze',
-    shadowShift: { r: -0.02, g: 0.01, b: 0.03 }, // Teal shadows
-    highlightShift: { r: 0.04, g: 0.02, b: -0.03 }, // Creamy warm highlights
-    contrast: 0.95, // Soft midtones
-    saturation: 1.1, // Golden hour boost
-    warmth: 0.20, // Very warm
-    grainAmount: 0.03,
-    grainSize: 0.75,
-    grainRoughness: 0.4, // Organic/Cloudy
+    shadowShift: { r: -0.01, g: 0.01, b: 0.02 },  // Cool/neutral shadows
+    highlightShift: { r: 0.0, g: 0.03, b: -0.12 }, // Green-yellow highlights with blue reduction
+    contrast: 1.35,  // Moderate contrast
+    saturation: 0.95,  // Slightly reduced saturation
+    warmth: 0.03,
+    grainAmount: 0.012,
+    grainSize: 0.5,
+    grainRoughness: 0.3,
     isBlackAndWhite: false,
-    colorMatrix: MAT_AUTUMN, // Green -> Olive shift
-
-    // Recipe: Matte Shadow & Dreamy Glow
-    curves: {
-      rgb: [
-        { x: 0, y: 30 },    // Lifted blacks (Matte)
-        { x: 50, y: 65 },   // Soft shadows
-        { x: 128, y: 128 }, // Neutral mids
-        { x: 255, y: 245 }  // Soft whites
-      ],
-      red: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
-      green: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
-      blue: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
-    },
-    halation: 0.35,
-    halationRadius: 0.6,
-    halationThreshold: 0.2, // Glows easily
-    halationColor: '#FF9955', // Warm sunset glow
+    // No colorMatrix - preserve natural greens
+    // No curves - preserve deep blacks
+    halation: 0.03,  // Very subtle halation
+    halationRadius: 0.25,
+    halationThreshold: 0.75,  // Only bright highlights
+    halationColor: '#FFDDAA',
   },
 
   'portrait-160': {
