@@ -477,13 +477,13 @@ function App() {
       {/* Mobile Header */}
       <div className="mobile-header">
         <div className="mobile-header-content">
-          <div className="mobile-header-title">Film Grade Pro</div>
+          <div className="mobile-header-title">Photograde</div>
           <div className="mobile-header-actions">
             <button className="mobile-action-btn" onClick={() => fileInputRef.current?.click()} title="Load Image">
-              📁
+              +
             </button>
             <button className="mobile-action-btn" onClick={() => handleExport('png')} title="Export">
-              💾
+              ↓
             </button>
           </div>
         </div>
@@ -494,7 +494,7 @@ function App() {
         <div className={`panel left-panel${isMobile && activePanel === 'left' ? ' mobile-active' : ''}`}>
           {/* 文件加载 */}
           <div className="section">
-            <div className="section-title">📁 Project</div>
+            <div className="section-title">Project</div>
             <div className="file-input-wrapper">
               <input
                 type="file"
@@ -543,7 +543,7 @@ function App() {
                   cursor: (imageLoaded && autoParams) ? 'pointer' : 'not-allowed'
                 }}
               >
-                ✨ Auto Normalize Input
+                Auto Normalize Input
               </label>
             </div>
           </div>
@@ -551,7 +551,7 @@ function App() {
           {/* 胶片模拟 */}
           <div className="section">
             <div className="section-header">
-              <div className="section-title" style={{ marginBottom: 0 }}>🎞️ Film Emulation</div>
+              <div className="section-title" style={{ marginBottom: 0 }}>Film Emulation</div>
               <button className="reset-section-btn" onClick={() => dispatch({ type: 'RESET_FILM' })}>
                 Reset
               </button>
@@ -610,13 +610,13 @@ function App() {
             </div>
 
             <div style={{ marginTop: '16px' }}>
-              <CollapsibleSection title="🎬 Film Response">
+              <CollapsibleSection title="Film Response">
                 <ParamSlider dispatch={dispatch} label="Toe (Shadows)" value={params.filmToe} min={0} max={100} param="filmToe" />
                 <ParamSlider dispatch={dispatch} label="Shoulder (Highlights)" value={params.filmShoulder} min={0} max={100} param="filmShoulder" />
                 <ParamSlider dispatch={dispatch} label="Fade" value={params.fade} min={0} max={100} param="fade" />
               </CollapsibleSection>
 
-              <CollapsibleSection title="🎞️ Texture & Grain">
+              <CollapsibleSection title="Texture & Grain">
                 <ParamSlider dispatch={dispatch} label="Grain Amount" value={params.grainAmount} min={0} max={100} param="grainAmount" />
                 {params.grainAmount > 0 && (
                   <div style={{ paddingLeft: '10px', borderLeft: '2px solid #333', marginTop: '4px', marginBottom: '10px' }}>
@@ -636,7 +636,7 @@ function App() {
                 )}
               </CollapsibleSection>
 
-              <CollapsibleSection title="✨ Optics & Effects">
+              <CollapsibleSection title="Optics & Effects">
                 <ParamSlider dispatch={dispatch} label="Acutance (Sharpness)" value={params.acutance} min={0} max={100} param="acutance" />
                 <ParamSlider dispatch={dispatch} label="Halation" value={params.halation} min={0} max={100} param="halation" />
                 {params.halation > 0 && (
@@ -657,7 +657,7 @@ function App() {
                 <ParamSlider dispatch={dispatch} label="Diffusion" value={params.diffusion} min={0} max={100} param="diffusion" />
               </CollapsibleSection>
 
-              <CollapsibleSection title="🔲 Vignette">
+              <CollapsibleSection title="Vignette">
                 <ParamSlider dispatch={dispatch} label="Vignette" value={params.vignette} min={0} max={100} param="vignette" />
                 <ParamSlider dispatch={dispatch} label="Vignette Radius" value={params.vignetteRadius} min={0} max={100} param="vignetteRadius" />
               </CollapsibleSection>
@@ -675,7 +675,7 @@ function App() {
           {/* Input Log Profile */}
           <div className="section">
             <div className="section-header">
-              <div className="section-title" style={{ marginBottom: 0 }}>🎥 Input</div>
+              <div className="section-title" style={{ marginBottom: 0 }}>Input</div>
             </div>
             <LogSelector
               value={params.inputLogProfile}
@@ -700,7 +700,7 @@ function App() {
 
           <div className="section">
             <div className="section-header">
-              <div className="section-title" style={{ marginBottom: 0 }}>⚙️ Light</div>
+              <div className="section-title" style={{ marginBottom: 0 }}>Light</div>
               <button className="reset-section-btn" onClick={() => dispatch({ type: 'RESET_EXPOSURE' })}>
                 Reset
               </button>
@@ -717,7 +717,7 @@ function App() {
           {/* 色彩控制 */}
           <div className="section">
             <div className="section-header">
-              <div className="section-title" style={{ marginBottom: 0 }}>🎨 Color</div>
+              <div className="section-title" style={{ marginBottom: 0 }}>Color</div>
               <button className="reset-section-btn" onClick={() => dispatch({ type: 'RESET_COLOR' })}>
                 Reset
               </button>
@@ -729,19 +729,19 @@ function App() {
             <ParamSlider dispatch={dispatch} label="Vibrance" value={params.vibrance} param="vibrance" />
 
             {/* 光谱控制 */}
-            <div className="subsection-title">🌈 Spectral Controls</div>
+            <div className="subsection-title">Spectral Controls</div>
             <ParamSlider dispatch={dispatch} label="Volume (Density)" value={params.spectralVolume} param="spectralVolume" />
             <ParamSlider dispatch={dispatch} label="Luminance" value={params.spectralLuminance} param="spectralLuminance" />
             <ParamSlider dispatch={dispatch} label="Hue Shift" value={params.spectralHue} param="spectralHue" />
 
-            <div className="subsection-title">🤖 Adaptive Color</div>
+            <div className="subsection-title">Adaptive Color</div>
             <AdaptivePanel params={params} dispatch={dispatch} />
           </div>
 
           {/* LUT 强度 */}
           {customLUT && (
             <div className="section">
-              <div className="section-title">🎬 Custom LUT</div>
+              <div className="section-title">Custom LUT</div>
               <div className="lut-info">{customLUT.title || 'Loaded LUT'}</div>
               <ParamSlider dispatch={dispatch} label="LUT Strength" value={params.lutStrength} min={0} max={100} param="lutStrength" />
             </div>
@@ -866,7 +866,7 @@ function App() {
               <button className="zoom-btn" onClick={() => setZoom(50)} title="Fit 50%">50%</button>
               <button className="zoom-btn" onClick={() => setZoom(100)}>100%</button>
               <button className="zoom-btn" onClick={() => handleExport('png')} title="Export PNG">
-                💾
+                ↓
               </button>
             </div>
           </div>
@@ -877,7 +877,7 @@ function App() {
           {/* 曲线编辑器 */}
           <div className="section">
             <div className="section-header">
-              <div className="section-title" style={{ marginBottom: 0 }}>📈 Curves</div>
+              <div className="section-title" style={{ marginBottom: 0 }}>Curves</div>
             </div>
             <CurveEditor
               curves={params.curves}
@@ -891,7 +891,7 @@ function App() {
           {/* 色轮 */}
           <div className="section">
             <div className="section-header">
-              <div className="section-title" style={{ marginBottom: 0 }}>🎡 Color Wheels</div>
+              <div className="section-title" style={{ marginBottom: 0 }}>Color Wheels</div>
             </div>
             <ColorWheel
               mode={activeWheelMode}
@@ -941,21 +941,21 @@ function App() {
             className={`mobile-nav-tab${activePanel === 'left' ? ' active' : ''}`}
             onClick={() => setActivePanel('left')}
           >
-            <span className="mobile-nav-tab-icon">⚙️</span>
+            <span className="mobile-nav-tab-icon">☰</span>
             <span className="mobile-nav-tab-label">Settings</span>
           </button>
           <button
             className={`mobile-nav-tab${activePanel === 'canvas' ? ' active' : ''}`}
             onClick={() => setActivePanel('canvas')}
           >
-            <span className="mobile-nav-tab-icon">🖼️</span>
+            <span className="mobile-nav-tab-icon">◻</span>
             <span className="mobile-nav-tab-label">Image</span>
           </button>
           <button
             className={`mobile-nav-tab${activePanel === 'right' ? ' active' : ''}`}
             onClick={() => setActivePanel('right')}
           >
-            <span className="mobile-nav-tab-icon">🎨</span>
+            <span className="mobile-nav-tab-icon">◉</span>
             <span className="mobile-nav-tab-label">Tools</span>
           </button>
         </div>
