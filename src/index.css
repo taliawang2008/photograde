@@ -857,9 +857,13 @@ button {
 
 @media (max-width: 768px) {
     .main-layout {
-        display: block;
-        padding-top: calc(52px + env(safe-area-inset-top));
-        padding-bottom: calc(60px + env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: row;
+        height: calc(100vh - 52px - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        margin-top: calc(52px + env(safe-area-inset-top));
+        margin-bottom: calc(60px + env(safe-area-inset-bottom));
+        gap: 0;
+        background: var(--bg-base);
     }
 
     .mobile-header,
@@ -880,32 +884,41 @@ button {
         display: none;
     }
 
+    /* Golden ratio split: 38% panel, 62% image */
     .left-panel,
     .right-panel {
-        position: fixed;
-        top: calc(52px + env(safe-area-inset-top));
-        bottom: calc(60px + env(safe-area-inset-bottom));
-        width: 85%;
-        max-width: 320px;
-        z-index: 150;
-        transform: translateX(-100%);
-        transition: transform 0.25s ease;
-        background: var(--bg-surface);
-    }
-
-    .right-panel {
-        right: 0;
-        left: auto;
-        transform: translateX(100%);
+        position: relative;
+        width: 38%;
+        min-width: 200px;
+        max-width: 280px;
+        height: 100%;
+        overflow-y: auto;
+        display: none;
+        transform: none;
+        z-index: 1;
+        flex-shrink: 0;
     }
 
     .left-panel.mobile-active,
     .right-panel.mobile-active {
-        transform: translateX(0);
+        display: block;
     }
 
     .image-panel {
-        height: calc(100vh - 112px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        padding: var(--s2);
+    }
+
+    .canvas-panel {
+        height: 100%;
+        border-radius: var(--radius);
+    }
+
+    /* When no panel is active, image takes full width */
+    .main-layout:has(.left-panel:not(.mobile-active)):has(.right-panel:not(.mobile-active)) .image-panel {
+        width: 100%;
     }
 
     input[type="range"] {
@@ -925,6 +938,14 @@ button {
     .action-btn,
     .reset-section-btn {
         min-height: 40px;
+    }
+
+    .section {
+        padding: var(--s3);
+    }
+
+    .panel {
+        padding: var(--s3);
     }
 }
 

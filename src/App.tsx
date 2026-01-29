@@ -755,13 +755,8 @@ function App() {
           </div>
         </div>
 
-        {/* 中间面板 (Canvas) - Always visible, panels slide over */}
-        <div
-          className={`image-panel${isMobile && activePanel === 'left' ? ' mobile-shifted-right' : ''
-            }${isMobile && activePanel === 'right' ? ' mobile-shifted-left' : ''
-            }`}
-          onClick={() => isMobile && activePanel !== 'canvas' && setActivePanel('canvas')}
-        >
+        {/* 中间面板 (Canvas) - Always visible alongside panels */}
+        <div className="image-panel">
           <div className="panel canvas-panel">
             <div
               ref={containerRef}
