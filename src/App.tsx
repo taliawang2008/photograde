@@ -15,6 +15,7 @@ import { CollapsibleSection } from './components/CollapsibleSection';
 import { filmCharacterPresets } from './engine/filmPresets';
 import { getStoredValue } from './hooks/useLocalStorage';
 import { calculateImageStats, computeAutoParams } from './engine/AutoGrade';
+import { ExploreTabs } from './pages/ExploreTabs';
 import type {
   GradingParams,
   GradingAction,
@@ -29,6 +30,8 @@ import type {
 } from './types';
 import { acesOutputTransforms } from './engine/acesProfiles';
 import { defaultGradingParams } from './types';
+
+type AppMode = 'standard' | 'explore';
 
 // Reducer 处理状态更新
 function gradingReducer(state: GradingParams, action: GradingAction): GradingParams {
@@ -128,6 +131,9 @@ function gradingReducer(state: GradingParams, action: GradingAction): GradingPar
 }
 
 function App() {
+  // App mode state - switch between Standard and Explore
+  const [appMode, setAppMode] = useState<AppMode>('standard');
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<WebGLEngine | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -472,6 +478,11 @@ function App() {
 
 
 
+  // If in explore mode, render the explore tabs
+  if (appMode === 'explore') {
+    return <ExploreTabs onBack={() => setAppMode('standard')} />;
+  }
+
   return (
     <div className="container">
       {/* Mobile Header */}
@@ -494,7 +505,16 @@ function App() {
         <div className={`panel left-panel${isMobile && activePanel === 'left' ? ' mobile-active' : ''}`}>
           {/* 文件加载 */}
           <div className="section">
-            <div className="section-title">Project</div>
+            <div className="section-header">
+              <div className="section-title" style={{ marginBottom: 0 }}>Project</div>
+              <button
+                className="reset-section-btn"
+                onClick={() => setAppMode('explore')}
+                style={{ color: 'var(--accent)' }}
+              >
+                Explore →
+              </button>
+            </div>
             <div className="file-input-wrapper">
               <input
                 type="file"

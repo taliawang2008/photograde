@@ -1,4 +1,8 @@
 // 胶片模拟配置 - 扩展版
+// Portra profiles updated with research from:
+// - https://fstoppers.com/film/sibling-rivalry-comparison-kodaks-portra-160-400-and-800-430820
+// - https://shootfilmclub.com/articles/kodak-portra-complete-guide-2025/
+// - https://www.tonywodarck.com/education/2023/6/18/kodak-portra-400-film-guide
 import type { FilmType, FilmProfile } from '../types';
 
 // Shared Matrices
@@ -60,39 +64,47 @@ export const filmProfiles: Record<Exclude<FilmType, 'none'>, FilmProfile> = {
 
   'portrait-160': {
     name: 'P-Portrait 160',
+    // Research: Lower contrast, muted saturation (least saturated Portra)
+    // Natural skin tones, finest grain (virtually invisible)
     shadowShift: { r: 0.01, g: 0.015, b: 0.01 },
-    highlightShift: { r: 0.02, g: 0.01, b: -0.01 },
-    contrast: 0.92,
-    saturation: 0.85,
-    warmth: 0.03,
-    grainAmount: 0.01,
-    grainSize: 0.6,
+    highlightShift: { r: 0.015, g: 0.01, b: -0.005 },
+    contrast: 0.90,        // Lower contrast
+    saturation: 0.82,      // Most muted of Portra range
+    warmth: 0.02,
+    grainAmount: 0.008,    // Finest grain
+    grainSize: 0.5,
+    grainRoughness: 0.25,  // Very smooth
     isBlackAndWhite: false,
   },
 
   'portrait-400': {
     name: 'P-Portrait 400',
+    // Research: Moderate contrast, perfect saturation balance
+    // Warmer and more saturated than 160, flawless smooth skin tones
     shadowShift: { r: 0.015, g: 0.02, b: 0.01 },
     highlightShift: { r: 0.025, g: 0.015, b: -0.01 },
-    contrast: 0.95,
-    saturation: 0.88,
-    warmth: 0.05,
-    grainAmount: 0.018,
-    grainSize: 0.9,
-    grainRoughness: 0.3, // Very smooth T-Grain
+    contrast: 0.95,        // Moderate contrast
+    saturation: 0.90,      // Balanced saturation (more than 160)
+    warmth: 0.05,          // Warmer than 160
+    grainAmount: 0.015,    // Fine grain
+    grainSize: 0.75,
+    grainRoughness: 0.3,   // Very smooth T-Grain
     isBlackAndWhite: false,
     colorMatrix: MAT_PORTRAIT,
   },
 
   'portrait-800': {
     name: 'P-Portrait 800',
+    // Research: More saturated than 400 (boldest), visible pleasant grain
+    // Can be too saturated for portraits, higher contrast
     shadowShift: { r: 0.02, g: 0.025, b: 0.015 },
     highlightShift: { r: 0.03, g: 0.02, b: 0.0 },
-    contrast: 0.98,
-    saturation: 0.9,
+    contrast: 1.02,        // Higher contrast than 160/400
+    saturation: 0.95,      // Most saturated Portra (can be too much)
     warmth: 0.08,
-    grainAmount: 0.035,
-    grainSize: 1.1,
+    grainAmount: 0.032,    // Visible but pleasant grain
+    grainSize: 1.0,
+    grainRoughness: 0.4,
     isBlackAndWhite: false,
   },
 

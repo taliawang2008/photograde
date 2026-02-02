@@ -19,6 +19,13 @@ Optical filter emulation using custom convolution shaders with **dithering** for
 -   **Orton Effect**: Dreamy glow overlay for landscape and portrait photography.
 -   **Halation**: Physically-based simulation of light scattering in film emulsion layers.
 
+### 🤖 Adaptive Color Matching
+AI-assisted color transfer using the Reinhard algorithm in Lab color space.
+-   **Reference-Based Grading**: Load any reference image and automatically match its color palette.
+-   **Real-Time Analysis**: Computes Lab statistics (mean, std deviation) for source and target images.
+-   **Adjustable Strength**: Fine-tune the blend between original and matched colors (0-100%).
+-   **Works with Any Input**: Normalizes diverse images to achieve consistent looks.
+
 ### 🛠️ Professional Grading Tools
 -   **Log Input Support**: Native transforms for S-Log3, V-Log, C-Log3, LogC3, N-Log, F-Log.
 -   **ASC_CDL**: Industry-standard Lift/Gamma/Gain color wheels.
